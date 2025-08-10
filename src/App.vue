@@ -13,6 +13,7 @@ import Map from "./components/map.vue";
 import Stories from "./components/stories.vue";
 import Preloader from "./utils/Preloader.js";
 import { getMediaUrl } from "./utils/imageUtils.js";
+import { formatDate, parseExifDate } from "./utils/dateUtils.js";
 
 const md = new MobileDetect(window.navigator.userAgent);
 
@@ -40,7 +41,24 @@ export default {
         return response.json();
       })
       .then((data) => {
-        this.stories = data.stories;
+        // Sort stories by date (newest first, oldest last) and format dates
+        this.stories = data.stories
+          .sort((a, b) => {
+            // Use parseExifDate utility for consistent date parsing
+            const dateA = parseExifDate(a.date);
+            const dateB = parseExifDate(b.date);
+
+            // Handle cases where parsing might fail
+            if (!dateA && !dateB) return 0;
+            if (!dateA) return 1; // Put invalid dates at the end
+            if (!dateB) return -1; // Put invalid dates at the end
+
+            return dateB - dateA; // Newest first (descending order)
+          })
+          .map((story) => ({
+            ...story,
+            formattedDate: formatDate(story.date),
+          }));
 
         const coverImages = data.stories
           .filter((story) => story.cover)

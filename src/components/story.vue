@@ -2,8 +2,7 @@
 import { getMediaUrl } from "../utils/imageUtils.js";
 import Preloader from "../utils/Preloader.js";
 import gsap from "gsap";
-import { format, parseISO, parse } from "date-fns";
-import { fr } from "date-fns/locale";
+import { formatDate } from "../utils/dateUtils.js";
 
 export default {
   name: "Story",
@@ -61,21 +60,6 @@ export default {
       let landscape = photo.size.width > photo.size.height;
       return landscape ? "landscape" : "portrait";
     },
-    getDate(date) {
-      try {
-        if (typeof date === "string" && date.includes(":")) {
-          const dateObj = parse(date, "yyyy:MM:dd HH:mm:ss", new Date());
-          return format(dateObj, "dd/MM/yyyy", { locale: fr });
-        }
-
-        const dateObj =
-          typeof date === "string" ? parseISO(date) : new Date(date);
-        return format(dateObj, "dd/MM/yyyy", { locale: fr });
-      } catch (error) {
-        console.error("Error formatting date:", error);
-        return "";
-      }
-    },
     async fetchStoryData() {
       try {
         this.loading = true;
@@ -89,10 +73,23 @@ export default {
         }
 
         const data = await response.json();
-        this.storyData = data.data;
+
+        // Format dates for all photos before setting storyData
+        const formattedData = {
+          ...data.data,
+          photos: data.data.photos.map((photo) => ({
+            ...photo,
+            exif: {
+              ...photo.exif,
+              formattedDate: formatDate(photo.exif.date),
+            },
+          })),
+        };
+
+        this.storyData = formattedData;
 
         // Preload the first 4 photos for better user experience
-        const firstFourPhotos = data.data.photos
+        const firstFourPhotos = formattedData.photos
           .slice(0, 4)
           .map((photo) => getMediaUrl(this.story.id, photo.src));
 
@@ -135,7 +132,7 @@ export default {
             {{ story.name }}
           </div>
           <div class="story__header-date">
-            {{ getDate(storyData.photos[currentIndex].exif.date) }}
+            {{ storyData.photos[currentIndex].exif.formattedDate }}
           </div>
         </div>
         <div class="story__navigation">
