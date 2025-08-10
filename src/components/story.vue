@@ -201,6 +201,7 @@ $z-navigation: 30;
     height: 100%;
     opacity: 0;
     transition: opacity 600ms $easing;
+    background-color: $c-grey-light;
 
     &.show {
       opacity: 1;
