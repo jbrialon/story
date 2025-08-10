@@ -14,6 +14,7 @@ import Stories from "./components/stories.vue";
 import Preloader from "./utils/Preloader.js";
 import { getMediaUrl } from "./utils/imageUtils.js";
 import { formatDate, parseExifDate } from "./utils/dateUtils.js";
+import { setStoriesListHeight } from "./utils/sizeUtils.js";
 
 const md = new MobileDetect(window.navigator.userAgent);
 
@@ -68,6 +69,7 @@ export default {
       })
       .then(() => {
         this.loading = false;
+        setStoriesListHeight();
       })
       .catch((error) => {
         console.error("Error:", error);

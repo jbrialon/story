@@ -97,7 +97,7 @@ export default {
 
 <template>
   <div class="stories">
-    <ul class="stories__list">
+    <ul class="stories__list js-stories-list">
       <li
         v-for="(story, index) in stories"
         :key="story.id"
@@ -258,6 +258,11 @@ export default {
     align-items: center;
     justify-content: center;
     transform-style: preserve-3d;
+
+    @include small-only {
+      height: calc(var(--vh) - var(--stories-list-height));
+      aspect-ratio: unset;
+    }
   }
 
   &__slider {
