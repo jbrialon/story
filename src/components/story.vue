@@ -80,8 +80,6 @@ export default {
         console.error("Error fetching story data:", error);
       } finally {
         this.loading = false;
-        // this.$refs.story.classList.add("loaded");
-        // console.log(this.$refs.story);
         gsap.set(this.$refs.story, {
           rotationY: () => (this.index ? 90 : 0),
         });
@@ -202,6 +200,7 @@ $z-navigation: 30;
     }
 
     img {
+      display: block;
       width: 100%;
       height: 100%;
       object-fit: contain;
@@ -266,6 +265,12 @@ $z-navigation: 30;
       border: none;
       cursor: pointer;
       z-index: $z-navigation;
+      -webkit-tap-highlight-color: transparent !important;
+
+      &:focus {
+        border: none !important;
+        background: none !important;
+      }
 
       &--prev {
         left: 0;
