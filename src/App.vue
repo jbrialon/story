@@ -95,7 +95,7 @@ export default {
       left: 50%;
       transform: translate(-50%, -50%);
       aspect-ratio: 6;
-      --c: #0000 64%, $c-grey-light 66% 98%, #0000 101%;
+      --c: #0000 64%, #e5e5e5 66% 98%, #0000 101%;
       background: radial-gradient(35% 146% at 50% 159%, var(--c)) 0 0,
         radial-gradient(35% 146% at 50% -59%, var(--c)) 25% 100%;
       background-size: calc(100% / 3) 50%;
