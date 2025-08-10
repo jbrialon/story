@@ -38,8 +38,10 @@ export default {
       });
     },
     nextStory() {
-      if (this.currentIndex === this.slides.length - 1) {
-        return;
+      if (this.currentIndex === this.slides.length - 1) return;
+
+      if (this.slides.length === 0) {
+        this.slides = this.$refs.stories.map((ref) => ref.$el);
       }
 
       this.currentIndex++;
@@ -56,8 +58,10 @@ export default {
       });
     },
     prevStory() {
-      if (this.currentIndex === 0) {
-        return;
+      if (this.currentIndex === 0) return;
+
+      if (this.slides.length === 0) {
+        this.slides = this.$refs.stories.map((ref) => ref.$el);
       }
 
       this.currentIndex--;
@@ -75,17 +79,6 @@ export default {
     handlePhotoGps(gpsData) {
       this.$emit("photo-gps", gpsData);
     },
-  },
-  mounted() {
-    this.$nextTick(() => {
-      setTimeout(() => {
-        this.slides = this.$refs.stories.map((ref) => ref.$el);
-
-        gsap.set(this.slides, {
-          rotationY: (i) => (i ? 90 : 0),
-        });
-      }, 100);
-    });
   },
 };
 </script>
@@ -114,9 +107,10 @@ export default {
     </ul>
     <div ref="content" class="stories__content">
       <div class="stories__slider">
-        <template v-for="story in stories" :key="story.id">
+        <template v-for="(story, index) in stories" :key="story.id">
           <Story
             :story="story"
+            :index="index"
             class="stories__slide"
             ref="stories"
             @prev-story="prevStory"
@@ -132,8 +126,6 @@ export default {
 <style lang="scss">
 @use "../scss/vars" as *;
 @use "../scss/mixins" as *;
-
-$stories-width: 436px;
 
 .stories {
   position: absolute;
@@ -177,8 +169,7 @@ $stories-width: 436px;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    transition-duration: 0.3s;
-    transition-property: opacity;
+    transition: opacity 0.3s $easing;
     padding-bottom: 30px;
     background: none;
     border: none;
@@ -249,21 +240,6 @@ $stories-width: 436px;
     height: 100%;
     position: relative;
     perspective: 1000px;
-  }
-
-  &__slide {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    font-size: 50px;
-    backface-visibility: hidden;
-    transform-origin: center center calc($stories-width / 2 * -1);
-
-    @include small-only {
-      transform-origin: center center calc(var(--vw) / 2 * -1);
-    }
   }
 }
 </style>

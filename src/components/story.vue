@@ -1,11 +1,17 @@
 <script>
 import { getMediaUrl } from "../utils/imageUtils.js";
+import Preloader from "../utils/Preloader.js";
+import gsap from "gsap";
 
 export default {
   name: "Story",
   props: {
     story: {
       type: Object,
+      required: true,
+    },
+    index: {
+      type: Number,
       required: true,
     },
   },
@@ -23,8 +29,6 @@ export default {
 
       const hasGps = !!(currentPhoto.exif && currentPhoto.exif.GPS);
       if (hasGps) {
-        console.log(currentPhoto.exif.GPS);
-
         this.$emit("photo-gps", {
           latitude: currentPhoto.exif.GPS.latitude,
           longitude: currentPhoto.exif.GPS.longitude,
@@ -34,8 +38,8 @@ export default {
     },
   },
   methods: {
-    getMediaUrl(id, src) {
-      return getMediaUrl(id, src);
+    getMediaUrl(src) {
+      return getMediaUrl(this.story.id, src);
     },
     next() {
       if (this.currentIndex < this.storyData.photos.length - 1) {
@@ -65,10 +69,22 @@ export default {
 
         const data = await response.json();
         this.storyData = data.data;
+
+        // Preload the first 4 photos for better user experience
+        const firstFourPhotos = data.data.photos
+          .slice(0, 4)
+          .map((photo) => getMediaUrl(this.story.id, photo.src));
+
+        return Preloader.load(firstFourPhotos);
       } catch (error) {
         console.error("Error fetching story data:", error);
       } finally {
         this.loading = false;
+        // this.$refs.story.classList.add("loaded");
+        // console.log(this.$refs.story);
+        gsap.set(this.$refs.story, {
+          rotationY: () => (this.index ? 90 : 0),
+        });
       }
     },
   },
@@ -79,49 +95,54 @@ export default {
 </script>
 
 <template>
-  <div class="story">
-    <div class="story__content" v-if="!loading">
-      <div class="story__pagination">
-        <span
-          class="story__pagination-bullet"
-          v-for="index in storyData.photos.length"
-          :key="index"
-        >
+  <div class="story" ref="story">
+    <transition name="fade">
+      <div class="story__content" v-if="!loading">
+        <div class="story__pagination">
           <span
-            class="story__pagination-bullet-progress"
-            :style="{ width: index - 1 <= currentIndex ? '100%' : '0%' }"
+            class="story__pagination-bullet"
+            v-for="index in storyData.photos.length"
+            :key="index"
           >
+            <span
+              class="story__pagination-bullet-progress"
+              :style="{ width: index - 1 <= currentIndex ? '100%' : '0%' }"
+            >
+            </span>
           </span>
-        </span>
-      </div>
-      <div class="story__navigation">
-        <button
-          class="story__navigation-button story__navigation-button--prev"
-          @click="prev"
-        ></button>
-        <button
-          class="story__navigation-button story__navigation-button--next"
-          @click="next"
-        ></button>
-      </div>
-      <div class="story__image-container">
-        <div
-          class="story__image"
-          :class="{ show: index === currentIndex }"
-          v-for="(photo, index) in storyData.photos"
-        >
-          <img
-            :key="`photo-${index}`"
-            :src="getMediaUrl(story.id, photo.src)"
-            :alt="story.id"
-          />
+        </div>
+        <div class="story__navigation">
+          <button
+            class="story__navigation-button story__navigation-button--prev"
+            @click="prev"
+          ></button>
+          <button
+            class="story__navigation-button story__navigation-button--next"
+            @click="next"
+          ></button>
+        </div>
+        <div class="story__image-container">
+          <div
+            class="story__image"
+            :class="{ show: index === currentIndex }"
+            v-for="(photo, index) in storyData.photos"
+          >
+            <img
+              :key="`photo-${index}`"
+              :src="getMediaUrl(photo.src)"
+              :alt="story.id"
+            />
+          </div>
         </div>
       </div>
-    </div>
+    </transition>
   </div>
 </template>
 
 <style lang="scss">
+@use "../scss/vars" as *;
+@use "../scss/mixins" as *;
+
 $z-gradient: 10;
 $z-pagination: 20;
 $z-navigation: 30;
@@ -129,6 +150,16 @@ $z-navigation: 30;
 .story {
   width: 100%;
   height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 50px;
+  backface-visibility: hidden;
+  transform-origin: center center calc($stories-width / 2 * -1);
+
+  @include small-only {
+    transform-origin: center center calc(var(--vw) / 2 * -1);
+  }
 
   &__content {
     position: relative;
@@ -164,7 +195,7 @@ $z-navigation: 30;
     width: 100%;
     height: 100%;
     opacity: 0;
-    transition: opacity 600ms ease;
+    transition: opacity 600ms $easing;
 
     &.show {
       opacity: 1;
@@ -210,7 +241,7 @@ $z-navigation: 30;
       top: 0;
       height: 100%;
       width: 0;
-      transition: width 0.5s ease;
+      transition: width 0.5s $easing;
 
       &.viewed {
         background: #000;

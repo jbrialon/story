@@ -1,0 +1,11 @@
+@use "vars" as *;
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 900ms $easing;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
