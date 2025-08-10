@@ -159,6 +159,11 @@ export default {
               :src="getMediaUrl(photo.src)"
               :alt="story.id"
             />
+            <ul class="story__media-description">
+              <li v-for="(desc, index) in photo.exif.description" :key="index">
+                {{ desc }}
+              </li>
+            </ul>
           </div>
         </div>
       </div>
@@ -172,6 +177,7 @@ export default {
 
 $z-gradient: 10;
 $z-pagination: 20;
+$z-content: 21;
 $z-navigation: 30;
 
 .story {
@@ -180,7 +186,6 @@ $z-navigation: 30;
   position: absolute;
   top: 0;
   left: 0;
-  font-size: 50px;
   backface-visibility: hidden;
   transform-origin: center center calc($stories-width / 2 * -1);
 
@@ -242,6 +247,43 @@ $z-navigation: 30;
       width: 100%;
       height: 100%;
       object-fit: contain;
+    }
+
+    &-description {
+      position: absolute;
+      bottom: 15px;
+      left: 15px;
+      right: 15px;
+      z-index: $z-content;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+
+      li {
+        display: inline-block;
+        width: fit-content;
+        color: #fff;
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 1.2;
+        padding: 10px 12px;
+        background: rgba($c-grey-light, 0.2);
+        text-shadow: 0px 0px 4px rgba(0, 0, 0, 0.35);
+        letter-spacing: 0.06em;
+        backdrop-filter: blur(3px);
+        border-radius: 10px;
+        text-transform: uppercase;
+
+        &:first-child {
+          margin-bottom: 10px;
+        }
+
+        &:only-child {
+          margin-bottom: 0;
+        }
+      }
     }
   }
 
