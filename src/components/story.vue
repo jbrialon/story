@@ -55,6 +55,10 @@ export default {
         this.$emit("prev-story");
       }
     },
+    getClass(photo) {
+      let landscape = photo.size.width > photo.size.height;
+      return landscape ? "landscape" : "portrait";
+    },
     async fetchStoryData() {
       try {
         this.loading = true;
@@ -119,10 +123,13 @@ export default {
             @click="next"
           ></button>
         </div>
-        <div class="story__image-container">
+        <div class="story__media-container">
           <div
-            class="story__image"
-            :class="{ show: index === currentIndex }"
+            class="story__media"
+            :class="{
+              show: index === currentIndex,
+              [getClass(photo)]: true,
+            }"
             v-for="(photo, index) in storyData.photos"
           >
             <img
@@ -181,13 +188,13 @@ $z-navigation: 30;
     }
   }
 
-  &__image-container {
+  &__media-container {
     position: relative;
     width: 100%;
     height: 100%;
   }
 
-  &__image {
+  &__media {
     position: absolute;
     z-index: 5;
     width: 100%;
@@ -197,6 +204,14 @@ $z-navigation: 30;
 
     &.show {
       opacity: 1;
+    }
+
+    &.portrait {
+      img {
+        @include small-only {
+          object-fit: cover;
+        }
+      }
     }
 
     img {

@@ -153,6 +153,11 @@ export default {
     display: flex;
     flex-direction: row;
     gap: 25px;
+
+    @include small-only {
+      padding: 10px;
+      gap: 10px;
+    }
   }
 
   &__item {
@@ -176,6 +181,10 @@ export default {
 
     &:hover {
       cursor: pointer;
+    }
+
+    @include small-only {
+      padding-bottom: 0;
     }
   }
 
@@ -223,6 +232,10 @@ export default {
     margin-top: 10px;
     position: absolute;
     top: 70px;
+
+    @include small-only {
+      display: none;
+    }
   }
 
   &__content {
