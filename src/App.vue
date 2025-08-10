@@ -64,7 +64,7 @@ export default {
 @use "./scss/mixins" as *;
 @use "./scss/transitions";
 
-@import "./scss/main.scss";
+@use "./scss/main.scss";
 
 #app {
   position: relative;

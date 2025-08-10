@@ -2,6 +2,8 @@
 import { getMediaUrl } from "../utils/imageUtils.js";
 import Preloader from "../utils/Preloader.js";
 import gsap from "gsap";
+import { format, parseISO, parse } from "date-fns";
+import { fr } from "date-fns/locale";
 
 export default {
   name: "Story",
@@ -59,6 +61,21 @@ export default {
       let landscape = photo.size.width > photo.size.height;
       return landscape ? "landscape" : "portrait";
     },
+    getDate(date) {
+      try {
+        if (typeof date === "string" && date.includes(":")) {
+          const dateObj = parse(date, "yyyy:MM:dd HH:mm:ss", new Date());
+          return format(dateObj, "dd/MM/yyyy", { locale: fr });
+        }
+
+        const dateObj =
+          typeof date === "string" ? parseISO(date) : new Date(date);
+        return format(dateObj, "dd/MM/yyyy", { locale: fr });
+      } catch (error) {
+        console.error("Error formatting date:", error);
+        return "";
+      }
+    },
     async fetchStoryData() {
       try {
         this.loading = true;
@@ -112,6 +129,14 @@ export default {
             >
             </span>
           </span>
+        </div>
+        <div class="story__header">
+          <div class="story__header-title">
+            {{ story.name }}
+          </div>
+          <div class="story__header-date">
+            {{ getDate(storyData.photos[currentIndex].exif.date) }}
+          </div>
         </div>
         <div class="story__navigation">
           <button
@@ -182,7 +207,7 @@ $z-navigation: 30;
       background-image: linear-gradient(
         to top,
         rgba(255, 0, 0, 0),
-        rgba(0, 0, 0, 0.5)
+        rgba(0, 0, 0, 0.25)
       );
       pointer-events: none;
     }
@@ -261,6 +286,33 @@ $z-navigation: 30;
       &.viewed {
         background: #000;
       }
+    }
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    position: absolute;
+    top: 25px;
+    left: 10px;
+    height: 32px;
+    z-index: $z-navigation;
+    color: #fff;
+    text-decoration: none;
+    user-select: none;
+    transform: translateZ(0);
+
+    &-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-right: 12px;
+      text-shadow: 0px 0px 2px rgba(0, 0, 0, 0.35);
+    }
+
+    &-date {
+      font-size: 14px;
+      font-weight: 400;
+      text-shadow: 0px 0px 2px rgba(0, 0, 0, 0.35);
     }
   }
 

@@ -31,10 +31,14 @@ export default {
       gsap.to(this.slides[oldIndex], {
         rotationY: -90,
         onComplete: () => gsap.set(this.slides[oldIndex], { rotationY: 90 }),
+        duration: 1,
+        ease: "power2.out",
       });
 
       gsap.to(this.slides[this.currentIndex], {
         rotationY: 0,
+        duration: 1,
+        ease: "power2.out",
       });
     },
     nextStory() {
@@ -52,9 +56,13 @@ export default {
           // TODO:
           // we should reset the story to the first image
         },
+        duration: 1,
+        ease: "power2.out",
       });
       gsap.to(this.slides[this.currentIndex], {
         rotationY: 0,
+        duration: 1,
+        ease: "power2.out",
       });
     },
     prevStory() {
@@ -68,9 +76,13 @@ export default {
 
       gsap.to(this.slides[this.currentIndex + 1], {
         rotationY: 90,
+        duration: 1,
+        ease: "power2.out",
       });
       gsap.to(this.slides[this.currentIndex], {
         rotationY: 0,
+        duration: 1,
+        ease: "power2.out",
       });
     },
     getMediaUrl(story) {
