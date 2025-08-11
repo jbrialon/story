@@ -23,23 +23,35 @@ export default {
     Story,
   },
   methods: {
-    selectStory(id, index) {
-      // TODO: fix order of rotation
+    selectStory(index) {
+      if (this.currentIndex === index) return;
+
+      if (this.slides.length === 0) {
+        this.slides = this.$refs.stories.map((ref) => ref.$el);
+      }
+      const direction = index > this.currentIndex ? -1 : 1;
       const oldIndex = this.currentIndex;
       this.currentIndex = index;
 
       gsap.to(this.slides[oldIndex], {
-        rotationY: -90,
-        onComplete: () => gsap.set(this.slides[oldIndex], { rotationY: 90 }),
+        rotationY: direction * 90,
         duration: 1,
         ease: "power2.out",
       });
 
-      gsap.to(this.slides[this.currentIndex], {
-        rotationY: 0,
-        duration: 1,
-        ease: "power2.out",
-      });
+      gsap.fromTo(
+        this.slides[this.currentIndex],
+        {
+          rotationY: direction * -90,
+          duration: 1,
+          ease: "power2.out",
+        },
+        {
+          rotationY: 0,
+          duration: 1,
+          ease: "power2.out",
+        }
+      );
     },
     nextStory() {
       if (this.currentIndex === this.slides.length - 1) return;
@@ -100,7 +112,7 @@ export default {
         :key="story.id"
         class="stories__item"
       >
-        <button class="stories__button" @click="selectStory(story.id, index)">
+        <button class="stories__button" @click="selectStory(index)">
           <span class="stories__image">
             <img
               :src="getMediaUrl(story)"
