@@ -17,6 +17,7 @@ export default {
       activeStory: null,
       currentIndex: 0,
       slides: [],
+      storyViewed: [],
     };
   },
   components: {
@@ -100,6 +101,18 @@ export default {
     getMediaUrl(story) {
       return getMediaUrl(story.id, story.cover);
     },
+    handleNextStory(storyId) {
+      if (!this.storyViewed.includes(storyId)) {
+        this.storyViewed.push(storyId);
+      }
+      this.nextStory();
+    },
+    handlePrevStory(storyId) {
+      if (!this.storyViewed.includes(storyId)) {
+        this.storyViewed.push(storyId);
+      }
+      this.prevStory();
+    },
   },
 };
 </script>
@@ -113,7 +126,10 @@ export default {
         class="stories__item"
       >
         <button class="stories__button" @click="selectStory(index)">
-          <span class="stories__image">
+          <span
+            class="stories__image"
+            :class="{ viewed: storyViewed.includes(story.id) }"
+          >
             <img
               :src="getMediaUrl(story)"
               :alt="story.name"
@@ -134,6 +150,8 @@ export default {
             :index="index"
             class="stories__slide"
             ref="stories"
+            @next-story="handleNextStory"
+            @prev-story="handlePrevStory"
           />
         </template>
       </div>
@@ -170,7 +188,7 @@ export default {
     margin: 0;
     display: flex;
     flex-direction: row;
-    gap: 25px;
+    gap: 20px;
 
     @include small-only {
       padding: 10px;
@@ -209,7 +227,8 @@ export default {
   &__image {
     position: relative;
     border-radius: 50%;
-    padding: 4px;
+    padding: 6px;
+    transition: all 900ms $easing;
     background-image: linear-gradient(
       to right top,
       #ffc600 20%,
@@ -217,13 +236,22 @@ export default {
       #e600cc 80%
     );
 
+    &.viewed {
+      background-image: linear-gradient(
+        to right top,
+        rgba(#ffc600, 0.4) 20%,
+        rgba(#ff0040, 0.4),
+        rgba(#e600cc, 0.4) 80%
+      );
+    }
+
     &::before {
       content: "";
       position: absolute;
-      left: 2px;
-      top: 2px;
-      right: 2px;
-      bottom: 2px;
+      left: 3px;
+      top: 3px;
+      right: 3px;
+      bottom: 3px;
       background: #fff;
       border-radius: 50%;
       z-index: 1;
@@ -233,8 +261,8 @@ export default {
       position: relative;
       z-index: 2;
       display: block;
-      width: 64px;
-      height: 64px;
+      width: 60px;
+      height: 60px;
       border-radius: 50%;
       object-fit: cover;
       object-position: center;

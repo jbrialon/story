@@ -53,7 +53,7 @@ export default {
         this.currentIndex++;
       } else {
         // Navigate to next story
-        this.$parent.nextStory();
+        this.$emit("next-story", this.story.id);
       }
     },
     prev() {
@@ -61,7 +61,7 @@ export default {
         this.currentIndex--;
       } else {
         // Navigate to previous story
-        this.$parent.prevStory();
+        this.$emit("prev-story", this.story.id);
       }
     },
     getClass(photo) {
