@@ -1,5 +1,6 @@
 <script>
 import mapboxgl from "mapbox-gl";
+import { useStoryStore } from "../stores/storyStore.js";
 
 export default {
   name: "Map",
@@ -8,10 +9,10 @@ export default {
       type: Array,
       required: true,
     },
-    photoGps: {
-      type: Object,
-      default: null,
-    },
+  },
+  setup() {
+    const storyStore = useStoryStore();
+    return { storyStore };
   },
   data() {
     return {
@@ -26,17 +27,7 @@ export default {
       markers: [],
     };
   },
-  watch: {
-    photoGps(newGpsData) {
-      if (newGpsData && this.map) {
-        this.map.flyTo({
-          center: [newGpsData.longitude, newGpsData.latitude],
-          zoom: 12,
-          duration: 2000,
-        });
-      }
-    },
-  },
+
   methods: {
     createCustomMarker(story) {
       const markerElement = document.createElement("div");
@@ -95,14 +86,17 @@ export default {
         });
       }
     },
-    photoGps(newGpsData) {
-      if (newGpsData && this.map) {
-        this.map.flyTo({
-          center: [newGpsData.longitude, newGpsData.latitude],
-          zoom: 12,
-          duration: 2000,
-        });
-      }
+    "storyStore.activePhoto": {
+      handler(newPhotoData) {
+        if (newPhotoData && this.map) {
+          this.map.flyTo({
+            center: [newPhotoData.longitude, newPhotoData.latitude],
+            zoom: 12,
+            duration: 2000,
+          });
+        }
+      },
+      immediate: true,
     },
   },
   mounted() {

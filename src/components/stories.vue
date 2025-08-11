@@ -88,9 +88,6 @@ export default {
     getMediaUrl(story) {
       return getMediaUrl(story.id, story.cover);
     },
-    handlePhotoGps(gpsData) {
-      this.$emit("photo-gps", gpsData);
-    },
   },
 };
 </script>
@@ -125,9 +122,6 @@ export default {
             :index="index"
             class="stories__slide"
             ref="stories"
-            @prev-story="prevStory"
-            @next-story="nextStory"
-            @photo-gps="handlePhotoGps"
           />
         </template>
       </div>

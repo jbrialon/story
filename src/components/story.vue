@@ -3,6 +3,7 @@ import { getMediaUrl } from "../utils/imageUtils.js";
 import Preloader from "../utils/Preloader.js";
 import gsap from "gsap";
 import { formatDate } from "../utils/dateUtils.js";
+import { useStoryStore } from "../stores/storyStore.js";
 
 export default {
   name: "Story",
@@ -23,6 +24,10 @@ export default {
       currentIndex: 0,
     };
   },
+  setup() {
+    const storyStore = useStoryStore();
+    return { storyStore };
+  },
   watch: {
     currentIndex(index) {
       const currentPhoto = this.storyData.photos[index];
@@ -30,11 +35,12 @@ export default {
 
       const hasGps = !!(currentPhoto.exif && currentPhoto.exif.GPS);
       if (hasGps) {
-        this.$emit("photo-gps", {
+        this.storyStore.setActivePhoto({
           latitude: currentPhoto.exif.GPS.latitude,
           longitude: currentPhoto.exif.GPS.longitude,
-          storyId: this.story.id,
         });
+      } else {
+        this.storyStore.clearActivePhoto();
       }
     },
   },
@@ -46,14 +52,16 @@ export default {
       if (this.currentIndex < this.storyData.photos.length - 1) {
         this.currentIndex++;
       } else {
-        this.$emit("next-story");
+        // Navigate to next story
+        this.$parent.nextStory();
       }
     },
     prev() {
       if (this.currentIndex > 0) {
         this.currentIndex--;
       } else {
-        this.$emit("prev-story");
+        // Navigate to previous story
+        this.$parent.prevStory();
       }
     },
     getClass(photo) {

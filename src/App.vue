@@ -2,8 +2,8 @@
   <Transition name="fade">
     <div v-if="loading" class="loader"></div>
   </Transition>
-  <Map v-if="!isMobile" :stories="stories" :photoGps="photoGps" />
-  <Stories :stories="stories" @photo-gps="handlePhotoGps" />
+  <Map v-if="!isMobile" :stories="stories" />
+  <Stories :stories="stories" />
 </template>
 
 <script>
@@ -23,16 +23,10 @@ export default {
     return {
       loading: true,
       stories: [],
-      photoGps: null,
       isMobile: md.mobile(),
     };
   },
   components: { Map, Stories },
-  methods: {
-    handlePhotoGps(gpsData) {
-      this.photoGps = gpsData;
-    },
-  },
   mounted() {
     fetch("https://api.jerem.cool/story")
       .then((response) => {
