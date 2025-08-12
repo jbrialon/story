@@ -1,5 +1,4 @@
 <script>
-import { gsap } from "gsap";
 import { getMediaUrl } from "../utils/imageUtils";
 
 import Story from "./story.vue";
@@ -14,10 +13,9 @@ export default {
   },
   data() {
     return {
-      activeStory: null,
       currentIndex: 0,
-      slides: [],
       storyViewed: [],
+      transitionDirection: -1,
     };
   },
   components: {
@@ -27,76 +25,20 @@ export default {
     selectStory(index) {
       if (this.currentIndex === index) return;
 
-      if (this.slides.length === 0) {
-        this.slides = this.$refs.stories.map((ref) => ref.$el);
-      }
-      const direction = index > this.currentIndex ? -1 : 1;
-      const oldIndex = this.currentIndex;
+      this.transitionDirection = index > this.currentIndex ? 1 : -1;
       this.currentIndex = index;
-
-      gsap.to(this.slides[oldIndex], {
-        rotationY: direction * 90,
-        duration: 1,
-        ease: "power2.out",
-      });
-
-      gsap.fromTo(
-        this.slides[this.currentIndex],
-        {
-          rotationY: direction * -90,
-          duration: 1,
-          ease: "power2.out",
-        },
-        {
-          rotationY: 0,
-          duration: 1,
-          ease: "power2.out",
-        }
-      );
     },
     nextStory() {
-      if (this.currentIndex === this.slides.length - 1) return;
+      if (this.currentIndex === this.stories.length - 1) return;
 
-      if (this.slides.length === 0) {
-        this.slides = this.$refs.stories.map((ref) => ref.$el);
-      }
-
+      this.transitionDirection = 1;
       this.currentIndex++;
-
-      gsap.to(this.slides[this.currentIndex - 1], {
-        rotationY: -90,
-        onComplete: () => {
-          // TODO:
-          // we should reset the story to the first image
-        },
-        duration: 1,
-        ease: "power2.out",
-      });
-      gsap.to(this.slides[this.currentIndex], {
-        rotationY: 0,
-        duration: 1,
-        ease: "power2.out",
-      });
     },
     prevStory() {
       if (this.currentIndex === 0) return;
 
-      if (this.slides.length === 0) {
-        this.slides = this.$refs.stories.map((ref) => ref.$el);
-      }
-
+      this.transitionDirection = -1;
       this.currentIndex--;
-
-      gsap.to(this.slides[this.currentIndex + 1], {
-        rotationY: 90,
-        duration: 1,
-        ease: "power2.out",
-      });
-      gsap.to(this.slides[this.currentIndex], {
-        rotationY: 0,
-        duration: 1,
-        ease: "power2.out",
-      });
     },
     getMediaUrl(story) {
       return getMediaUrl(story.id, story.cover);
@@ -142,17 +84,26 @@ export default {
         </button>
       </li>
     </ul>
-    <div ref="content" class="stories__content">
+    <div class="stories__content">
       <div class="stories__slider">
         <template v-for="(story, index) in stories" :key="story.id">
-          <Story
-            :story="story"
-            :index="index"
-            class="stories__slide"
-            ref="stories"
-            @next-story="handleNextStory"
-            @prev-story="handlePrevStory"
-          />
+          <Transition
+            :name="
+              transitionDirection === 1
+                ? 'cube-effect-next'
+                : 'cube-effect-prev'
+            "
+          >
+            <Story
+              v-show="currentIndex === index"
+              :story="story"
+              :index="index"
+              class="stories__slide"
+              ref="stories"
+              @next-story="handleNextStory"
+              @prev-story="handlePrevStory"
+            />
+          </Transition>
         </template>
       </div>
     </div>
@@ -304,6 +255,50 @@ export default {
     height: 100%;
     position: relative;
     perspective: 1000px;
+  }
+
+  &__slide {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+  }
+
+  .cube-effect-next-enter-active,
+  .cube-effect-next-leave-active {
+    transition: transform 1000ms $easing;
+  }
+
+  .cube-effect-next-enter-from {
+    transform: rotateY(90deg);
+  }
+
+  .cube-effect-next-enter-to,
+  .cube-effect-next-leave-from {
+    transform: rotateY(0deg);
+  }
+
+  .cube-effect-next-leave-to {
+    transform: rotateY(-90deg);
+  }
+
+  .cube-effect-prev-enter-active,
+  .cube-effect-prev-leave-active {
+    transition: transform 1000ms $easing;
+  }
+
+  .cube-effect-prev-enter-from {
+    transform: rotateY(-90deg);
+  }
+
+  .cube-effect-prev-enter-to,
+  .cube-effect-prev-leave-from {
+    transform: rotateY(0deg);
+  }
+
+  .cube-effect-prev-leave-to {
+    transform: rotateY(90deg);
   }
 }
 </style>

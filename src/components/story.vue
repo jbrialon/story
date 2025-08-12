@@ -1,7 +1,6 @@
 <script>
 import { getMediaUrl } from "../utils/imageUtils.js";
 import Preloader from "../utils/Preloader.js";
-import gsap from "gsap";
 import { formatDate } from "../utils/dateUtils.js";
 import { useStoryStore } from "../stores/storyStore.js";
 
@@ -106,9 +105,6 @@ export default {
         console.error("Error fetching story data:", error);
       } finally {
         this.loading = false;
-        gsap.set(this.$refs.story, {
-          rotationY: () => (this.index ? 90 : 0),
-        });
       }
     },
   },
@@ -119,7 +115,7 @@ export default {
 </script>
 
 <template>
-  <div class="story" ref="story">
+  <div class="story">
     <transition name="fade">
       <div class="story__content" v-if="!loading">
         <div class="story__pagination">
