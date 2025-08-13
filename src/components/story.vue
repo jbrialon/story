@@ -41,6 +41,8 @@ export default {
       } else {
         this.storyStore.clearActivePhoto();
       }
+
+      this.controlVideoPlayback();
     },
   },
   methods: {
@@ -66,6 +68,26 @@ export default {
     getClass(photo) {
       let landscape = photo.size.width > photo.size.height;
       return landscape ? "landscape" : "portrait";
+    },
+    controlVideoPlayback() {
+      if (!this.storyData || !this.storyData.medias) return;
+
+      this.storyData.medias.forEach((media, index) => {
+        if (media.type === "video") {
+          const videoElement = this.$refs[`video-${index}`];
+          if (videoElement && videoElement.length > 0) {
+            const video = videoElement[0];
+            if (index === this.currentIndex) {
+              // Play video if it's the current index
+              video.currentTime = 0; // Reset to start
+              video.play();
+            } else {
+              // Pause video if it's not the current index
+              video.pause();
+            }
+          }
+        }
+      });
     },
     async fetchStoryData() {
       try {
@@ -180,10 +202,9 @@ export default {
                 :key="`video-${index}`"
                 :src="getMediaUrl(media.src)"
                 :alt="story.id"
-                muted
-                autoplay
                 loop
                 playsinline
+                :ref="`video-${index}`"
               />
             </template>
             <ul class="story__media-description">
