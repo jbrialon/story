@@ -29,7 +29,7 @@ export default {
   },
   watch: {
     currentIndex(index) {
-      const currentPhoto = this.storyData.photos[index];
+      const currentPhoto = this.storyData.medias[index];
       if (!currentPhoto) return;
 
       const hasGps = !!(currentPhoto.exif && currentPhoto.exif.GPS);
@@ -48,7 +48,7 @@ export default {
       return getMediaUrl(this.story.id, src);
     },
     next() {
-      if (this.currentIndex < this.storyData.photos.length - 1) {
+      if (this.currentIndex < this.storyData.medias.length - 1) {
         this.currentIndex++;
       } else {
         // Navigate to next story
@@ -84,11 +84,13 @@ export default {
         // Format dates for all photos before setting storyData
         const formattedData = {
           ...data.data,
-          photos: data.data.photos.map((photo) => ({
-            ...photo,
+          medias: data.data.medias.map((media) => ({
+            ...media,
             exif: {
-              ...photo.exif,
-              formattedDate: formatDate(photo.exif.date),
+              ...media.exif,
+              formattedDate: media.exif?.date
+                ? formatDate(media.exif.date)
+                : null,
             },
           })),
         };
@@ -96,9 +98,10 @@ export default {
         this.storyData = formattedData;
 
         // Preload the first 4 photos for better user experience
-        const firstFourPhotos = formattedData.photos
+        const firstFourPhotos = formattedData.medias
           .slice(0, 4)
-          .map((photo) => getMediaUrl(this.story.id, photo.src));
+          .filter((media) => media.type === "photo")
+          .map((media) => getMediaUrl(this.story.id, media.src));
 
         return Preloader.load(firstFourPhotos);
       } catch (error) {
@@ -121,7 +124,7 @@ export default {
         <div class="story__pagination">
           <span
             class="story__pagination-bullet"
-            v-for="index in storyData.photos.length"
+            v-for="index in storyData.medias.length"
             :key="index"
           >
             <span
@@ -136,7 +139,7 @@ export default {
             {{ story.name }}
           </div>
           <div class="story__header-date">
-            {{ storyData.photos[currentIndex].exif.formattedDate }}
+            {{ storyData.medias[currentIndex].exif.formattedDate }}
           </div>
         </div>
         <div class="story__navigation">
@@ -152,19 +155,31 @@ export default {
         <div class="story__media-container">
           <div
             class="story__media"
+            v-for="(media, index) in storyData.medias"
             :class="{
               show: index === currentIndex,
-              [getClass(photo)]: true,
+              [getClass(media)]: true,
             }"
-            v-for="(photo, index) in storyData.photos"
           >
-            <img
-              :key="`photo-${index}`"
-              :src="getMediaUrl(photo.src)"
-              :alt="story.id"
-            />
+            <template v-if="media.type === 'photo'">
+              <img
+                :key="`photo-${index}`"
+                :src="getMediaUrl(media.src)"
+                :alt="story.id"
+              />
+            </template>
+            <template v-else>
+              <video
+                :key="`video-${index}`"
+                :src="getMediaUrl(media.src)"
+                :alt="story.id"
+                muted
+                autoplay
+                loop
+              />
+            </template>
             <ul class="story__media-description">
-              <li v-for="(desc, index) in photo.exif.description" :key="index">
+              <li v-for="(desc, index) in media.exif.description" :key="index">
                 {{ desc }}
               </li>
             </ul>
@@ -246,11 +261,16 @@ $z-navigation: 30;
       }
     }
 
-    img {
+    img,
+    video {
       display: block;
       width: 100%;
       height: 100%;
       object-fit: contain;
+    }
+
+    video {
+      object-fit: cover;
     }
 
     &-description {
