@@ -176,6 +176,7 @@ export default {
                 muted
                 autoplay
                 loop
+                playsinline
               />
             </template>
             <ul class="story__media-description">
