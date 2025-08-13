@@ -199,12 +199,13 @@ export default {
             </template>
             <template v-else>
               <video
+                :ref="`video-${index}`"
+                :poster="getMediaUrl(media.poster)"
                 :key="`video-${index}`"
                 :src="getMediaUrl(media.src)"
                 :alt="story.id"
                 loop
                 playsinline
-                :ref="`video-${index}`"
               />
             </template>
             <ul class="story__media-description">

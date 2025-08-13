@@ -1,5 +1,6 @@
 <script>
 import { getMediaUrl } from "../utils/imageUtils";
+import { useStoryStore } from "../stores/storyStore.js";
 
 import Story from "./story.vue";
 
@@ -11,12 +12,20 @@ export default {
       required: true,
     },
   },
+  setup() {
+    const storyStore = useStoryStore();
+    return { storyStore };
+  },
   data() {
     return {
-      currentIndex: 0,
       storyViewed: [],
       transitionDirection: -1,
     };
+  },
+  computed: {
+    currentIndex() {
+      return this.storyStore.currentStoryIndex;
+    },
   },
   components: {
     Story,
@@ -26,19 +35,19 @@ export default {
       if (this.currentIndex === index) return;
 
       this.transitionDirection = index > this.currentIndex ? 1 : -1;
-      this.currentIndex = index;
+      this.storyStore.setCurrentStoryIndex(index);
     },
     nextStory() {
       if (this.currentIndex === this.stories.length - 1) return;
 
       this.transitionDirection = 1;
-      this.currentIndex++;
+      this.storyStore.setCurrentStoryIndex(this.currentIndex + 1);
     },
     prevStory() {
       if (this.currentIndex === 0) return;
 
       this.transitionDirection = -1;
-      this.currentIndex--;
+      this.storyStore.setCurrentStoryIndex(this.currentIndex - 1);
     },
     getMediaUrl(story) {
       return getMediaUrl(story.id, story.cover);
@@ -118,8 +127,9 @@ export default {
   position: absolute;
   width: $stories-width;
   z-index: 10;
-  top: 5vh;
+  top: 50%;
   left: 5vh;
+  transform: translateY(-50%);
   background: white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   border-radius: 15px;
@@ -131,6 +141,7 @@ export default {
     left: 0;
     bottom: 0;
     border-radius: 0;
+    transform: translateY(0);
   }
 
   &__list {
@@ -196,7 +207,7 @@ export default {
       );
     }
 
-    &::before {
+    &:before {
       content: "";
       position: absolute;
       left: 3px;

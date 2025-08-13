@@ -1,5 +1,7 @@
 <script>
 import mapboxgl from "mapbox-gl";
+import { getMediaUrl } from "../utils/imageUtils";
+
 import { useStoryStore } from "../stores/storyStore.js";
 
 export default {
@@ -21,34 +23,29 @@ export default {
         token:
           "pk.eyJ1IjoiamJyaWFsb24iLCJhIjoiZjJkNjkyNDNiMzU0YjAxY2FjNGZlMjU3MGFiYjYyZmQifQ.lwFTmFgGxSuvfoJdTcx7Jg",
         style: "mapbox://styles/jbrialon/ck3yg7nb807lc1co990hb80mi/draft",
-        center: [100.9925, 15.87],
+        center: [2.465, 44.95017765091265],
         zoom: 3,
+        bounds: new mapboxgl.LngLatBounds(),
       },
       markers: [],
     };
   },
-
   methods: {
-    createCustomMarker(story) {
+    getMediaUrl(story) {
+      return getMediaUrl(story.id, story.cover);
+    },
+    createCustomMarker(story, index) {
       const markerElement = document.createElement("div");
+      const cover = this.getMediaUrl(story);
       markerElement.className = "map__marker";
       markerElement.innerHTML = `
         <div class="map__marker-circle">
-          <span class="map__marker-number">${story.id || "•"}</span>
+          <img class="map__marker-img" src="${cover}" alt="${story.name}" />
         </div>
       `;
 
       markerElement.addEventListener("click", () => {
-        this.$emit("story-selected", story);
-        this.markers.forEach((marker) => {
-          const circle = marker.element.querySelector(".map__marker-circle");
-          if (circle) {
-            circle.classList.toggle(
-              "map__marker-circle--active",
-              marker.story.id === story.id
-            );
-          }
-        });
+        this.storyStore.setCurrentStoryIndex(index);
       });
 
       const marker = new mapboxgl.Marker(markerElement);
@@ -65,6 +62,11 @@ export default {
         story: story,
       });
 
+      this.mapOptions.bounds.extend([
+        story.location.longitude,
+        story.location.latitude,
+      ]);
+
       return marker;
     },
     clearMarkers() {
@@ -73,17 +75,28 @@ export default {
       });
       this.markers = [];
     },
+    fitBounds() {
+      if (this.markers.length === 0) return;
+
+      this.map.fitBounds(this.mapOptions.bounds, {
+        padding: { top: 50, bottom: 50, left: 600, right: 100 }, // hardcoded values for now
+        duration: 1000,
+        maxZoom: 15,
+      });
+    },
   },
   watch: {
     stories(value) {
       if (value) {
         this.clearMarkers();
 
-        value.forEach((story) => {
+        value.forEach((story, index) => {
           if (story.location) {
-            this.createCustomMarker(story);
+            this.createCustomMarker(story, index);
           }
         });
+
+        this.fitBounds();
       }
     },
     "storyStore.activePhoto": {
@@ -118,6 +131,9 @@ export default {
 </template>
 
 <style lang="scss">
+@use "../scss/vars" as *;
+@use "../scss/mixins" as *;
+
 .map {
   position: absolute;
   z-index: 0;
@@ -134,35 +150,45 @@ export default {
     cursor: pointer;
 
     &-circle {
-      width: 30px;
-      height: 30px;
+      position: relative;
       border-radius: 50%;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border: 3px solid white;
+      padding: 6px;
+      transition: all 300ms $easing;
+      background-image: linear-gradient(
+        to right top,
+        #ffc600 20%,
+        #ff0040,
+        #e600cc 80%
+      );
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s ease;
+
+      &:before {
+        content: "";
+        position: absolute;
+        left: 3px;
+        top: 3px;
+        right: 3px;
+        bottom: 3px;
+        background: #fff;
+        border-radius: 50%;
+        z-index: 1;
+      }
 
       &:hover {
         transform: scale(1.1);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
       }
-
-      &--active {
-        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-        transform: scale(1.2);
-        box-shadow: 0 4px 16px rgba(255, 107, 107, 0.4);
-      }
     }
 
-    &-number {
-      display: none;
-      color: white;
-      font-weight: bold;
-      font-size: 12px;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    &-img {
+      position: relative;
+      z-index: 2;
+      display: block;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: center;
     }
   }
 }
