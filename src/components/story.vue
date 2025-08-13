@@ -81,18 +81,25 @@ export default {
 
         const data = await response.json();
 
-        // Format dates for all photos before setting storyData
+        // Format dates for all medias before setting storyData
         const formattedData = {
           ...data.data,
-          medias: data.data.medias.map((media) => ({
-            ...media,
-            exif: {
-              ...media.exif,
-              formattedDate: media.exif?.date
-                ? formatDate(media.exif.date)
-                : null,
-            },
-          })),
+          medias: data.data.medias
+            .map((media) => ({
+              ...media,
+              exif: {
+                ...media.exif,
+                formattedDate: media.exif?.date
+                  ? formatDate(media.exif.date)
+                  : null,
+              },
+            }))
+            .sort((a, b) => {
+              // ordering based on the filename (should be done in the API)
+              const numA = a.src.match(/\d+/)?.[0] || "";
+              const numB = b.src.match(/\d+/)?.[0] || "";
+              return numA.localeCompare(numB, undefined, { numeric: true });
+            }),
         };
 
         this.storyData = formattedData;
