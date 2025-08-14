@@ -4,6 +4,7 @@
   </Transition>
   <Map v-if="!isMobile" :stories="stories" />
   <Stories :stories="stories" />
+  <!-- <Goo /> -->
 </template>
 
 <script>
@@ -11,12 +12,14 @@ import MobileDetect from "mobile-detect";
 
 import Map from "./components/map.vue";
 import Stories from "./components/stories.vue";
+import Goo from "./components/goo.vue";
 import Preloader from "./utils/Preloader.js";
 import { getMediaUrl } from "./utils/imageUtils.js";
 import { formatDate, parseExifDate } from "./utils/dateUtils.js";
 import { setStoriesListHeight } from "./utils/sizeUtils.js";
 
 const md = new MobileDetect(window.navigator.userAgent);
+const apiUrl = import.meta.env.VITE_API_URL;
 
 export default {
   data() {
@@ -26,9 +29,9 @@ export default {
       isMobile: md.mobile(),
     };
   },
-  components: { Map, Stories },
+  components: { Map, Stories, Goo },
   mounted() {
-    fetch("https://api.jerem.cool/story")
+    fetch(`${apiUrl}/story`)
       .then((response) => {
         if (!response.ok) {
           throw new Error("Network response was not ok " + response.statusText);

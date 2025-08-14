@@ -4,6 +4,8 @@ import Preloader from "../utils/Preloader.js";
 import { formatDate } from "../utils/dateUtils.js";
 import { useStoryStore } from "../stores/storyStore.js";
 
+const apiUrl = import.meta.env.VITE_API_URL;
+
 export default {
   name: "Story",
   props: {
@@ -93,9 +95,7 @@ export default {
       try {
         this.loading = true;
 
-        const response = await fetch(
-          `https://api.jerem.cool/story/${this.story.id}`
-        );
+        const response = await fetch(`${apiUrl}/story/${this.story.id}`);
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
