@@ -1,6 +1,6 @@
 <template>
   <Transition name="fade">
-    <div v-if="loading" class="loader"></div>
+    <Loader class="loader" v-if="loading" />
   </Transition>
   <Map v-if="!isMobile" />
   <Stories />
@@ -8,11 +8,16 @@
 </template>
 
 <script>
+// Utils
 import MobileDetect from "mobile-detect";
 
+// Components
 import Map from "./components/map.vue";
 import Stories from "./components/stories.vue";
 import Goo from "./components/goo.vue";
+import Loader from "./components/loader.vue";
+
+// Stores
 import { useStoryStore } from "./stores/storyStore.js";
 
 const md = new MobileDetect(window.navigator.userAgent);
@@ -23,7 +28,7 @@ export default {
       isMobile: md.mobile(),
     };
   },
-  components: { Map, Stories, Goo },
+  components: { Map, Stories, Goo, Loader },
   computed: {
     storyStore() {
       return useStoryStore();
@@ -42,7 +47,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style scoped lang="scss">
 @use "./scss/vars" as *;
 @use "./scss/mixins" as *;
 @use "./scss/transitions";
@@ -66,36 +71,6 @@ export default {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-color: white;
-    z-index: 100;
-
-    @include small-only {
-      width: var(--vw);
-      height: var(--vh);
-    }
-
-    &:after {
-      position: absolute;
-      content: "";
-      display: block;
-      height: 30px;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      aspect-ratio: 6;
-      --c: #0000 64%, #e5e5e5 66% 98%, #0000 101%;
-      background: radial-gradient(35% 146% at 50% 159%, var(--c)) 0 0,
-        radial-gradient(35% 146% at 50% -59%, var(--c)) 25% 100%;
-      background-size: calc(100% / 3) 50%;
-      background-repeat: repeat-x;
-      animation: l1 1s infinite linear;
-
-      @keyframes l1 {
-        to {
-          background-position: 50% 0, 75% 100%;
-        }
-      }
-    }
   }
 }
 </style>

@@ -2,6 +2,8 @@
 import { getMediaUrl } from "../utils/imageUtils.js";
 import { useStoryStore } from "../stores/storyStore.js";
 
+import Loader from "./loader.vue";
+
 export default {
   name: "Story",
   props: {
@@ -23,6 +25,7 @@ export default {
     const storyStore = useStoryStore();
     return { storyStore };
   },
+  components: { Loader },
   computed: {
     isCurrentStory() {
       return this.storyStore.currentStoryIndex === this.index;
@@ -120,6 +123,9 @@ export default {
 
 <template>
   <div class="story">
+    <Transition name="fade">
+      <Loader v-if="loading" />
+    </Transition>
     <Transition name="fade">
       <div class="story__content" v-if="!loading && storyData">
         <div class="story__pagination">
