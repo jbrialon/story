@@ -86,9 +86,9 @@ export default {
   },
   watch: {
     "storyStore.stories": {
-      handler(value) {
-        if (value && value.length > 0) {
-          value.forEach((story, index) => {
+      handler(stories) {
+        if (stories && stories.length > 0) {
+          stories.forEach((story, index) => {
             if (story.location) {
               this.createStoryMarker(story, index);
             }
@@ -96,6 +96,26 @@ export default {
           this.fitBounds();
         }
       },
+      immediate: true,
+    },
+    "storyStore.storyData": {
+      handler(storyData) {
+        if (storyData && storyData.length > 0) {
+          storyData.forEach((story, index) => {
+            if (story && story.medias && story.medias.length > 0) {
+              story.medias.forEach((media) => {
+                if (media.exif && media.exif.GPS) {
+                  console.log(
+                    media.exif.GPS.latitude,
+                    media.exif.GPS.longitude
+                  );
+                }
+              });
+            }
+          });
+        }
+      },
+      deep: true,
       immediate: true,
     },
     "storyStore.activePhoto": {

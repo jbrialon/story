@@ -11,9 +11,9 @@ export const useStoryStore = defineStore("story", {
     activePhoto: null,
     currentStoryIndex: 0,
     stories: [],
-    loading: false,
+    loading: true,
     storiesLoading: [], // Array to track loading state for individual stories
-    storyData: {}, // Object to store individual story data by story ID
+    storyData: [], // Array to store individual story data by story index
   }),
 
   actions: {
@@ -32,6 +32,7 @@ export const useStoryStore = defineStore("story", {
     setStories(stories) {
       this.stories = stories;
       this.storiesLoading = new Array(stories.length).fill(false);
+      this.storyData = new Array(stories.length).fill(null);
     },
 
     setLoading(loading) {
@@ -44,12 +45,13 @@ export const useStoryStore = defineStore("story", {
       }
     },
 
-    setStoryData(storyId, data) {
-      this.storyData[storyId] = data;
+    setStoryData(storyIndex, data) {
+      if (this.storyData[storyIndex] !== undefined) {
+        this.storyData[storyIndex] = data;
+      }
     },
 
     async loadStories() {
-      this.setLoading(true);
       try {
         const response = await fetch(`${apiUrl}/story`);
 
@@ -89,6 +91,13 @@ export const useStoryStore = defineStore("story", {
         await Preloader.load(coverImages);
         setStoriesListHeight();
 
+        // Automatically fetch data for the current story index
+        if (sortedStories.length > 0) {
+          sortedStories.forEach(async (story, index) => {
+            this.fetchStoryData(index); // Don't await here to avoid blocking
+          });
+        }
+
         return sortedStories;
       } catch (error) {
         console.error("Error loading stories:", error);
@@ -98,11 +107,16 @@ export const useStoryStore = defineStore("story", {
       }
     },
 
-    async fetchStoryData(storyId, storyIndex) {
+    async fetchStoryData(storyIndex) {
       try {
         this.setStoryLoading(storyIndex, true);
 
-        const response = await fetch(`${apiUrl}/story/${storyId}`);
+        const story = this.stories[storyIndex];
+        if (!story) {
+          throw new Error(`Story at index ${storyIndex} not found`);
+        }
+
+        const response = await fetch(`${apiUrl}/story/${story.id}`);
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -131,15 +145,14 @@ export const useStoryStore = defineStore("story", {
             }),
         };
 
-        this.setStoryData(storyId, formattedData);
+        this.setStoryData(storyIndex, formattedData);
 
-        // Preload the first 4 photos for better user experience
-        const firstFourPhotos = formattedData.medias
-          .slice(0, 4)
+        // Preload the photos for the stories
+        const photos = formattedData.medias
           .filter((media) => media.type === "photo")
-          .map((media) => getMediaUrl(storyId, media.src));
+          .map((media) => getMediaUrl(story.id, media.src));
 
-        await Preloader.load(firstFourPhotos);
+        await Preloader.load(photos);
         return formattedData;
       } catch (error) {
         console.error("Error fetching story data:", error);
@@ -155,6 +168,7 @@ export const useStoryStore = defineStore("story", {
     isLoading: (state) => state.loading,
     getStoryLoading: (state) => (storyIndex) =>
       state.storiesLoading[storyIndex] || false,
-    getStoryData: (state) => (storyId) => state.storyData[storyId] || null,
+    getStoryData: (state) => (storyIndex) =>
+      state.storyData[storyIndex] || null,
   },
 });

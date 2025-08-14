@@ -28,7 +28,7 @@ export default {
       return this.storyStore.currentStoryIndex === this.index;
     },
     storyData() {
-      return this.storyStore.getStoryData(this.story.id);
+      return this.storyStore.getStoryData(this.index);
     },
     loading() {
       return this.storyStore.getStoryLoading(this.index);
@@ -114,11 +114,6 @@ export default {
         }
       });
     },
-  },
-  async mounted() {
-    if (!this.storyData) {
-      await this.storyStore.fetchStoryData(this.story.id, this.index);
-    }
   },
 };
 </script>
