@@ -47,7 +47,7 @@ export default {
 };
 </script>
 
-<style scoped lang="scss">
+<style lang="scss">
 @use "./scss/vars" as *;
 @use "./scss/mixins" as *;
 @use "./scss/transitions";
