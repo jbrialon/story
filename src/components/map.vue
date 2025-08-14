@@ -6,12 +6,6 @@ import { useStoryStore } from "../stores/storyStore.js";
 
 export default {
   name: "Map",
-  props: {
-    stories: {
-      type: Array,
-      required: true,
-    },
-  },
   setup() {
     const storyStore = useStoryStore();
     return { storyStore };
@@ -27,14 +21,14 @@ export default {
         zoom: 3,
         bounds: new mapboxgl.LngLatBounds(),
       },
-      markers: [],
+      storyMarkers: [],
     };
   },
   methods: {
     getMediaUrl(story) {
       return getMediaUrl(story.id, story.cover);
     },
-    createCustomMarker(story, index) {
+    createStoryMarker(story, index) {
       const markerElement = document.createElement("div");
       const cover = this.getMediaUrl(story);
       markerElement.className = "map__marker";
@@ -56,7 +50,7 @@ export default {
       marker.setLngLat(coord);
       marker.addTo(this.map);
 
-      this.markers.push({
+      this.storyMarkers.push({
         marker: marker,
         element: markerElement,
         story: story,
@@ -69,14 +63,19 @@ export default {
 
       return marker;
     },
-    clearMarkers() {
-      this.markers.forEach(({ marker }) => {
-        marker.remove();
+    hideStoryMarkers() {
+      this.storyMarkers.forEach((marker) => {
+        marker.element.classList.add("hide");
       });
-      this.markers = [];
+    },
+    showStoryMarkers() {
+      this.storyMarkers.forEach((marker) => {
+        marker.element.classList.remove("hide");
+      });
+      this.fitBounds();
     },
     fitBounds() {
-      if (this.markers.length === 0) return;
+      if (this.storyMarkers.length === 0) return;
 
       this.map.fitBounds(this.mapOptions.bounds, {
         padding: { top: 50, bottom: 50, left: 600, right: 100 }, // hardcoded values for now
@@ -86,27 +85,30 @@ export default {
     },
   },
   watch: {
-    stories(value) {
-      if (value) {
-        this.clearMarkers();
-
-        value.forEach((story, index) => {
-          if (story.location) {
-            this.createCustomMarker(story, index);
-          }
-        });
-
-        this.fitBounds();
-      }
+    "storyStore.stories": {
+      handler(value) {
+        if (value && value.length > 0) {
+          value.forEach((story, index) => {
+            if (story.location) {
+              this.createStoryMarker(story, index);
+            }
+          });
+          this.fitBounds();
+        }
+      },
+      immediate: true,
     },
     "storyStore.activePhoto": {
       handler(newPhotoData) {
         if (newPhotoData && this.map) {
+          this.hideStoryMarkers();
           this.map.flyTo({
             center: [newPhotoData.longitude, newPhotoData.latitude],
             zoom: 12,
             duration: 2000,
           });
+        } else if (this.storyMarkers && this.map) {
+          this.showStoryMarkers();
         }
       },
       immediate: true,
@@ -148,6 +150,13 @@ export default {
 
   &__marker {
     cursor: pointer;
+    transition: opacity 300ms $easing;
+
+    &.hide {
+      opacity: 0;
+      transform: scale(0.8);
+      pointer-events: none;
+    }
 
     &-circle {
       position: relative;

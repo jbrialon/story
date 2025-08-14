@@ -6,12 +6,6 @@ import Story from "./story.vue";
 
 export default {
   name: "Stories",
-  props: {
-    stories: {
-      type: Array,
-      required: true,
-    },
-  },
   setup() {
     const storyStore = useStoryStore();
     return { storyStore };
@@ -22,13 +16,16 @@ export default {
       transitionDirection: -1,
     };
   },
+  components: {
+    Story,
+  },
   computed: {
     currentIndex() {
       return this.storyStore.currentStoryIndex;
     },
-  },
-  components: {
-    Story,
+    stories() {
+      return this.storyStore.stories;
+    },
   },
   methods: {
     selectStory(index) {
@@ -151,6 +148,13 @@ export default {
     display: flex;
     flex-direction: row;
     gap: 20px;
+    overflow-y: hidden;
+    overflow-x: scroll;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
 
     @include small-only {
       padding: 10px;

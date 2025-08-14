@@ -2,8 +2,8 @@
   <Transition name="fade">
     <div v-if="loading" class="loader"></div>
   </Transition>
-  <Map v-if="!isMobile" :stories="stories" />
-  <Stories :stories="stories" />
+  <Map v-if="!isMobile" />
+  <Stories />
   <!-- <Goo /> -->
 </template>
 
@@ -13,65 +13,31 @@ import MobileDetect from "mobile-detect";
 import Map from "./components/map.vue";
 import Stories from "./components/stories.vue";
 import Goo from "./components/goo.vue";
-import Preloader from "./utils/Preloader.js";
-import { getMediaUrl } from "./utils/imageUtils.js";
-import { formatDate, parseExifDate } from "./utils/dateUtils.js";
-import { setStoriesListHeight } from "./utils/sizeUtils.js";
+import { useStoryStore } from "./stores/storyStore.js";
 
 const md = new MobileDetect(window.navigator.userAgent);
-const apiUrl = import.meta.env.VITE_API_URL;
 
 export default {
   data() {
     return {
-      loading: true,
-      stories: [],
       isMobile: md.mobile(),
     };
   },
   components: { Map, Stories, Goo },
-  mounted() {
-    fetch(`${apiUrl}/story`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Network response was not ok " + response.statusText);
-        }
-        return response.json();
-      })
-      .then((data) => {
-        // Sort stories by date (newest first, oldest last) and format dates
-        this.stories = data.stories
-          .sort((a, b) => {
-            // Use parseExifDate utility for consistent date parsing
-            const dateA = parseExifDate(a.date);
-            const dateB = parseExifDate(b.date);
-
-            // Handle cases where parsing might fail
-            if (!dateA && !dateB) return 0;
-            if (!dateA) return 1; // Put invalid dates at the end
-            if (!dateB) return -1; // Put invalid dates at the end
-
-            return dateB - dateA; // Newest first (descending order)
-          })
-          .map((story) => ({
-            ...story,
-            formattedDate: formatDate(story.date),
-          }));
-
-        const coverImages = data.stories
-          .filter((story) => story.cover)
-          .map((story) => getMediaUrl(story.id, story.cover));
-
-        return Preloader.load(coverImages);
-      })
-      .then(() => {
-        this.loading = false;
-        setStoriesListHeight();
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-        this.loading = false;
-      });
+  computed: {
+    storyStore() {
+      return useStoryStore();
+    },
+    loading() {
+      return this.storyStore.isLoading;
+    },
+  },
+  async mounted() {
+    try {
+      await this.storyStore.loadStories();
+    } catch (error) {
+      console.error("Error:", error);
+    }
   },
 };
 </script>
@@ -102,6 +68,11 @@ export default {
     height: 100vh;
     background-color: white;
     z-index: 100;
+
+    @include small-only {
+      width: var(--vw);
+      height: var(--vh);
+    }
 
     &:after {
       position: absolute;

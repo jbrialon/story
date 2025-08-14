@@ -1,10 +1,6 @@
 <script>
 import { getMediaUrl } from "../utils/imageUtils.js";
-import Preloader from "../utils/Preloader.js";
-import { formatDate } from "../utils/dateUtils.js";
 import { useStoryStore } from "../stores/storyStore.js";
-
-const apiUrl = import.meta.env.VITE_API_URL;
 
 export default {
   name: "Story",
@@ -20,8 +16,6 @@ export default {
   },
   data() {
     return {
-      storyData: null,
-      loading: true,
       currentIndex: 0,
     };
   },
@@ -29,8 +23,37 @@ export default {
     const storyStore = useStoryStore();
     return { storyStore };
   },
+  computed: {
+    isCurrentStory() {
+      return this.storyStore.currentStoryIndex === this.index;
+    },
+    storyData() {
+      return this.storyStore.getStoryData(this.story.id);
+    },
+    loading() {
+      return this.storyStore.getStoryLoading(this.index);
+    },
+  },
   watch: {
+    isCurrentStory(isCurrent) {
+      if (isCurrent && this.storyData) {
+        const currentPhoto = this.storyData.medias[this.currentIndex];
+        if (!currentPhoto) return;
+
+        const hasGps = !!(currentPhoto.exif && currentPhoto.exif.GPS);
+        if (hasGps) {
+          this.storyStore.setActivePhoto({
+            latitude: currentPhoto.exif.GPS.latitude,
+            longitude: currentPhoto.exif.GPS.longitude,
+          });
+        } else {
+          this.storyStore.clearActivePhoto();
+        }
+      }
+    },
     currentIndex(index) {
+      if (!this.storyData) return;
+
       const currentPhoto = this.storyData.medias[index];
       if (!currentPhoto) return;
 
@@ -91,65 +114,19 @@ export default {
         }
       });
     },
-    async fetchStoryData() {
-      try {
-        this.loading = true;
-
-        const response = await fetch(`${apiUrl}/story/${this.story.id}`);
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        // Format dates for all medias before setting storyData
-        const formattedData = {
-          ...data.data,
-          medias: data.data.medias
-            .map((media) => ({
-              ...media,
-              exif: {
-                ...media.exif,
-                formattedDate: media.exif?.date
-                  ? formatDate(media.exif.date)
-                  : null,
-              },
-            }))
-            .sort((a, b) => {
-              // ordering based on the filename (should be done in the API)
-              const numA = a.src.match(/\d+/)?.[0] || "";
-              const numB = b.src.match(/\d+/)?.[0] || "";
-              return numA.localeCompare(numB, undefined, { numeric: true });
-            }),
-        };
-
-        this.storyData = formattedData;
-
-        // Preload the first 4 photos for better user experience
-        const firstFourPhotos = formattedData.medias
-          .slice(0, 4)
-          .filter((media) => media.type === "photo")
-          .map((media) => getMediaUrl(this.story.id, media.src));
-
-        return Preloader.load(firstFourPhotos);
-      } catch (error) {
-        console.error("Error fetching story data:", error);
-      } finally {
-        this.loading = false;
-      }
-    },
   },
-  mounted() {
-    this.fetchStoryData();
+  async mounted() {
+    if (!this.storyData) {
+      await this.storyStore.fetchStoryData(this.story.id, this.index);
+    }
   },
 };
 </script>
 
 <template>
   <div class="story">
-    <transition name="fade">
-      <div class="story__content" v-if="!loading">
+    <Transition name="fade">
+      <div class="story__content" v-if="!loading && storyData">
         <div class="story__pagination">
           <span
             class="story__pagination-bullet"
@@ -216,7 +193,7 @@ export default {
           </div>
         </div>
       </div>
-    </transition>
+    </Transition>
   </div>
 </template>
 
