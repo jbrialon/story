@@ -39,7 +39,9 @@ export default {
       `;
 
       markerElement.addEventListener("click", () => {
-        this.storyStore.setCurrentStoryIndex(index);
+        if (this.storyStore.storiesLoading[index] === false) {
+          this.storyStore.setCurrentStoryIndex(index);
+        }
       });
 
       const marker = new mapboxgl.Marker(markerElement);
@@ -53,7 +55,7 @@ export default {
       this.storyMarkers.push({
         marker: marker,
         element: markerElement,
-        story: story,
+        storyIndex: index,
       });
 
       this.mapOptions.bounds.extend([
@@ -62,6 +64,11 @@ export default {
       ]);
 
       return marker;
+    },
+    getStoryMarker(storyIndex) {
+      return this.storyMarkers.find(
+        (marker) => marker.storyIndex === storyIndex
+      );
     },
     hideStoryMarkers() {
       this.storyMarkers.forEach((marker) => {
@@ -108,6 +115,10 @@ export default {
         storiesLoading.forEach((loading, index) => {
           if (loading === false) {
             console.log("story", index, "loaded");
+            const marker = this.getStoryMarker(index);
+            if (marker) {
+              marker.element.classList.add("loaded");
+            }
           }
         });
       },
@@ -163,27 +174,39 @@ export default {
   }
 
   &__marker {
-    cursor: pointer;
-    transition: opacity 300ms $easing;
+    &.loaded {
+      cursor: pointer;
+
+      .map__marker-circle {
+        transform: scale(1);
+      }
+    }
 
     &.hide {
-      opacity: 0;
-      transform: scale(0.8);
       pointer-events: none;
+
+      .map__marker-circle {
+        opacity: 0;
+        transform: scale(0.8);
+      }
     }
 
     &-circle {
       position: relative;
       border-radius: 50%;
       padding: 6px;
-      transition: all 300ms $easing;
       background-image: linear-gradient(
         to right top,
         #ffc600 20%,
         #ff0040,
         #e600cc 80%
       );
+      transition: opacity 300ms $easing, transform 600ms $easing,
+        box-shadow 300ms $easing;
+
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      transform: scale(0);
+      opacity: 1;
 
       &:before {
         content: "";

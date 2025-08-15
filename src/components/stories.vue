@@ -32,7 +32,7 @@ export default {
   },
   methods: {
     selectStory(index) {
-      if (this.currentIndex === index) return;
+      if (this.currentIndex === index || this.storiesLoading[index]) return;
 
       this.transitionDirection = index > this.currentIndex ? 1 : -1;
       this.storyStore.setCurrentStoryIndex(index);
@@ -179,6 +179,10 @@ export default {
       .stories__name {
         opacity: 1;
       }
+
+      .stories__button {
+        cursor: pointer;
+      }
     }
   }
 
@@ -186,7 +190,6 @@ export default {
     position: relative;
     color: #000;
     text-decoration: none;
-    cursor: pointer;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -195,10 +198,6 @@ export default {
     padding-bottom: 30px;
     background: none;
     border: none;
-
-    &:hover {
-      cursor: pointer;
-    }
 
     @include small-only {
       padding-bottom: 0;
