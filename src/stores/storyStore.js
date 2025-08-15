@@ -62,7 +62,7 @@ export const useStoryStore = defineStore("story", {
         const data = await response.json();
 
         // Sort stories by date (newest first, oldest last) and format dates
-        const sortedStories = data.stories
+        const stories = data.stories
           .sort((a, b) => {
             // Use parseExifDate utility for consistent date parsing
             const dateA = parseExifDate(a.date);
@@ -81,7 +81,7 @@ export const useStoryStore = defineStore("story", {
           }));
 
         // Set stories in the store
-        this.setStories(sortedStories);
+        this.setStories(stories);
 
         // Preload cover images
         const coverImages = this.stories
@@ -91,69 +91,113 @@ export const useStoryStore = defineStore("story", {
         await Preloader.load(coverImages);
         setStoriesListHeight();
 
-        // For instead of ForEach to load stories sequentially
-        for (let i = 0; i < this.stories.length; i++) {
-          await this.fetchStoryData(this.stories[i], i);
+        // For Loop instead of ForEach to load stories sequentially
+        for (let i = 0; i < stories.length; i++) {
+          await this.fetchStoryData(stories[i], i);
         }
 
         return this.stories;
       } catch (error) {
         console.error("Error loading stories:", error);
         throw error;
-      } finally {
       }
     },
 
     async fetchStoryData(story, index) {
-      try {
-        const response = await fetch(`${apiUrl}/story/${story.id}`);
+      return (
+        fetch(`${apiUrl}/story/${story.id}`)
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+          })
+          // ----------------------------------------------------------------
+          // fetch story data
+          // ----------------------------------------------------------------
+          .then((data) => {
+            // Format dates for all medias before setting storyData
+            const storyData = {
+              ...data.data,
+              medias: data.data.medias
+                .map((media) => ({
+                  ...media,
+                  exif: {
+                    ...media.exif,
+                    formattedDate: media.exif?.date
+                      ? formatDate(media.exif.date)
+                      : null,
+                  },
+                }))
+                .sort((a, b) => {
+                  // ordering based on the filename (should be done in the API)
+                  const numA = a.src.match(/\d+/)?.[0] || "";
+                  const numB = b.src.match(/\d+/)?.[0] || "";
+                  return numA.localeCompare(numB, undefined, { numeric: true });
+                }),
+            };
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+            this.setStoryData(index, storyData);
 
-        const data = await response.json();
+            return { storyData };
+          })
+          // ----------------------------------------------------------------
+          // preload the photos for the stories
+          // ----------------------------------------------------------------
+          .then(({ storyData }) => {
+            const medias = storyData.medias.map((media) =>
+              getMediaUrl(story.id, media.src)
+            );
 
-        // Format dates for all medias before setting storyData
-        const formattedData = {
-          ...data.data,
-          medias: data.data.medias
-            .map((media) => ({
-              ...media,
-              exif: {
-                ...media.exif,
-                formattedDate: media.exif?.date
-                  ? formatDate(media.exif.date)
-                  : null,
-              },
-            }))
-            .sort((a, b) => {
-              // ordering based on the filename (should be done in the API)
-              const numA = a.src.match(/\d+/)?.[0] || "";
-              const numB = b.src.match(/\d+/)?.[0] || "";
-              return numA.localeCompare(numB, undefined, { numeric: true });
-            }),
-        };
-
-        this.setStoryData(index, formattedData);
-
-        // Preload the photos for the stories
-        const medias = formattedData.medias.map((media) =>
-          getMediaUrl(story.id, media.src)
-        );
-
-        await Preloader.load(medias);
-        return formattedData;
-      } catch (error) {
-        console.error("Error fetching story data:", error);
-        throw error;
-      } finally {
-        // we hide the loader when the first story is loaded
-        if (index === 0) {
-          this.setLoading(false);
-        }
-        this.setStoryLoading(index, false);
-      }
+            return Preloader.load(medias);
+          })
+          // ----------------------------------------------------------------
+          // load the path json files
+          // ----------------------------------------------------------------
+          .then((storyData) => {
+            storyData.stats && storyData.stats.length > 0
+              ? Promise.all(
+                  storyData.stats.map((stat, index) => {
+                    const pathUrl = `${apiUrl}/story/${encodeURIComponent(
+                      story.id
+                    )}${stat.pathJson}`;
+                    return fetch(pathUrl)
+                      .then((response) => {
+                        if (response.ok) {
+                          return response.json();
+                        } else {
+                          console.warn(`Could not fetch path: ${pathUrl}`);
+                          return null;
+                        }
+                      })
+                      .then((pathData) => {
+                        if (pathData) {
+                          storyData.stats[index] = {
+                            ...stat,
+                            path: pathData,
+                          };
+                        }
+                      });
+                  })
+                )
+              : Promise.resolve();
+          })
+          // ----------------------------------------------------------------
+          // set the story loading state
+          // ----------------------------------------------------------------
+          .then((storyData) => {
+            // we hide the loader when the first story is loaded
+            if (index === 0) {
+              this.setLoading(false);
+            }
+            this.setStoryLoading(index, false);
+            return storyData;
+          })
+          .catch((error) => {
+            console.error("Error fetching story data:", error);
+            throw error;
+          })
+      );
     },
   },
 
