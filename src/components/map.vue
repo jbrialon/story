@@ -21,6 +21,7 @@ export default {
         zoom: 3,
         bounds: new mapboxgl.LngLatBounds(),
       },
+      storiesMarkers: [],
       storyMarkers: [],
     };
   },
@@ -28,7 +29,8 @@ export default {
     getMediaUrl(story) {
       return getMediaUrl(story.id, story.cover);
     },
-    createStoryMarker(story, index) {
+    // Main Markers for the stories
+    createStoriesMarker(story, index) {
       const markerElement = document.createElement("div");
       const cover = this.getMediaUrl(story);
       markerElement.className = "map__marker";
@@ -52,7 +54,7 @@ export default {
       marker.setLngLat(coord);
       marker.addTo(this.map);
 
-      this.storyMarkers.push({
+      this.storiesMarkers.push({
         marker: marker,
         element: markerElement,
         storyIndex: index,
@@ -65,24 +67,66 @@ export default {
 
       return marker;
     },
+    // Markers for the story (medias of the story)
+    createStoryMarker(index) {
+      const story = this.storiesData[index];
+      if (this.storyMarkers[index]) return;
+
+      this.storyMarkers[index] = [];
+
+      story.medias.forEach((media) => {
+        const markerElement = document.createElement("div");
+        markerElement.className = "map__story-marker";
+        markerElement.innerHTML = `
+        <div class="map__story-marker-circle"></div>`;
+
+        const marker = new mapboxgl.Marker(markerElement);
+        const coord = new mapboxgl.LngLat(
+          media.exif.GPS.longitude,
+          media.exif.GPS.latitude
+        );
+        marker.setLngLat(coord);
+        marker.addTo(this.map);
+
+        this.storyMarkers[index].push({
+          marker: marker,
+          element: markerElement,
+        });
+      });
+    },
     getStoryMarker(storyIndex) {
-      return this.storyMarkers.find(
+      return this.storiesMarkers.find(
         (marker) => marker.storyIndex === storyIndex
       );
     },
-    hideStoryMarkers() {
-      this.storyMarkers.forEach((marker) => {
+    hideStoriesMarkers() {
+      this.storiesMarkers.forEach((marker) => {
         marker.element.classList.add("hide");
       });
-    },
-    showStoryMarkers() {
+
       this.storyMarkers.forEach((marker) => {
+        // todo should only show the active story markers
+        marker.forEach((marker) => {
+          marker.element.classList.add("active");
+        });
+      });
+    },
+    showStoriesMarkers() {
+      this.storiesMarkers.forEach((marker) => {
         marker.element.classList.remove("hide");
       });
+
+      this.storyMarkers.forEach((marker) => {
+        // todo should only hide the active markers
+        marker.forEach((marker) => {
+          marker.element.classList.remove("active");
+        });
+      });
+
       this.fitBounds();
     },
     fitBounds() {
-      if (this.storyMarkers.length === 0) return;
+      if (this.storiesMarkers.length === 0) return;
 
       this.map.fitBounds(this.mapOptions.bounds, {
         padding: { top: 50, bottom: 50, left: 600, right: 100 }, // hardcoded values for now
@@ -102,7 +146,7 @@ export default {
         if (stories && stories.length > 0) {
           stories.forEach((story, index) => {
             if (story.location) {
-              this.createStoryMarker(story, index);
+              this.createStoriesMarker(story, index);
             }
           });
           this.fitBounds();
@@ -114,10 +158,10 @@ export default {
       handler(storiesLoading) {
         storiesLoading.forEach((loading, index) => {
           if (loading === false) {
-            console.log("story", index, "loaded");
             const marker = this.getStoryMarker(index);
             if (marker) {
               marker.element.classList.add("loaded");
+              this.createStoryMarker(index);
             }
           }
         });
@@ -127,14 +171,14 @@ export default {
     "storyStore.activePhoto": {
       handler(newPhotoData) {
         if (newPhotoData && this.map) {
-          this.hideStoryMarkers();
+          this.hideStoriesMarkers();
           this.map.flyTo({
             center: [newPhotoData.longitude, newPhotoData.latitude],
             zoom: 12,
             duration: 2000,
           });
-        } else if (this.storyMarkers && this.map) {
-          this.showStoryMarkers();
+        } else if (this.storiesMarkers && this.map) {
+          this.showStoriesMarkers();
         }
       },
     },
@@ -235,6 +279,43 @@ export default {
       border-radius: 50%;
       object-fit: cover;
       object-position: center;
+    }
+  }
+
+  &__story-marker {
+    pointer-events: none;
+
+    &.active {
+      .map__story-marker-circle {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    &-circle {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: 3px solid white;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 600ms $easing;
+      opacity: 0;
+      transform: scale(0);
+
+      // &:hover {
+      //   transform: scale(1.1);
+      //   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      // }
+
+      // &--active {
+      //   background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+      //   transform: scale(1.2);
+      //   box-shadow: 0 4px 16px rgba(255, 107, 107, 0.4);
+      // }
     }
   }
 }
