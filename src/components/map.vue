@@ -84,6 +84,11 @@ export default {
       });
     },
   },
+  computed: {
+    storiesData() {
+      return this.storyStore.storyData;
+    },
+  },
   watch: {
     "storyStore.stories": {
       handler(stories) {
@@ -96,27 +101,17 @@ export default {
           this.fitBounds();
         }
       },
-      immediate: true,
+      deep: true,
     },
-    "storyStore.storyData": {
-      handler(storyData) {
-        if (storyData && storyData.length > 0) {
-          storyData.forEach((story, index) => {
-            if (story && story.medias && story.medias.length > 0) {
-              story.medias.forEach((media) => {
-                if (media.exif && media.exif.GPS) {
-                  console.log(
-                    media.exif.GPS.latitude,
-                    media.exif.GPS.longitude
-                  );
-                }
-              });
-            }
-          });
-        }
+    "storyStore.storiesLoading": {
+      handler(storiesLoading) {
+        storiesLoading.forEach((loading, index) => {
+          if (loading === false) {
+            console.log("story", index, "loaded");
+          }
+        });
       },
       deep: true,
-      immediate: true,
     },
     "storyStore.activePhoto": {
       handler(newPhotoData) {
@@ -131,7 +126,6 @@ export default {
           this.showStoryMarkers();
         }
       },
-      immediate: true,
     },
   },
   mounted() {

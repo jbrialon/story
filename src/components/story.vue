@@ -124,7 +124,7 @@ export default {
 <template>
   <div class="story">
     <Transition name="fade">
-      <Loader v-if="loading" />
+      <Loader class="story__loader" v-if="loading" />
     </Transition>
     <Transition name="fade">
       <div class="story__content" v-if="!loading && storyData">
@@ -184,6 +184,7 @@ export default {
                 :alt="story.id"
                 loop
                 playsinline
+                preload="metadata"
               />
             </template>
             <ul class="story__media-description">
@@ -198,7 +199,7 @@ export default {
   </div>
 </template>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @use "../scss/vars" as *;
 @use "../scss/mixins" as *;
 
@@ -218,6 +219,13 @@ $z-navigation: 30;
 
   @include small-only {
     transform-origin: center center calc(var(--vw) / 2 * -1);
+  }
+
+  &__loader {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
   }
 
   &__content {

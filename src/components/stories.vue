@@ -26,6 +26,9 @@ export default {
     stories() {
       return this.storyStore.stories;
     },
+    storiesLoading() {
+      return this.storyStore.storiesLoading;
+    },
   },
   methods: {
     selectStory(index) {
@@ -76,7 +79,10 @@ export default {
         <button class="stories__button" @click="selectStory(index)">
           <span
             class="stories__image"
-            :class="{ viewed: storyViewed.includes(story.id) }"
+            :class="{
+              viewed: storyViewed.includes(story.id),
+              loading: storiesLoading[index],
+            }"
           >
             <img
               :src="getMediaUrl(story)"
@@ -195,23 +201,35 @@ export default {
     border-radius: 50%;
     padding: 6px;
     transition: all 900ms $easing;
-    background-image: linear-gradient(
-      to right top,
-      #ffc600 20%,
-      #ff0040,
-      #e600cc 80%
-    );
-
-    &.viewed {
-      background-image: linear-gradient(
-        to right top,
-        rgba(#ffc600, 0.4) 20%,
-        rgba(#ff0040, 0.4),
-        rgba(#e600cc, 0.4) 80%
-      );
-    }
 
     &:before {
+      content: "";
+      position: absolute;
+      display: block;
+      inset: 0;
+      border-radius: 50%;
+      background-image: linear-gradient(
+        to right top,
+        #ffc600 20%,
+        #ff0040,
+        #e600cc 80%
+      );
+      transition: opacity 0.3s $easing;
+    }
+
+    &.viewed {
+      &:before {
+        opacity: 0.4;
+      }
+    }
+
+    &.loading {
+      &:before {
+        animation: loading 2000ms infinite ease-in;
+      }
+    }
+
+    &:after {
       content: "";
       position: absolute;
       left: 3px;
@@ -314,6 +332,12 @@ export default {
 
   .cube-effect-prev-leave-to {
     transform: rotateY(90deg);
+  }
+
+  @keyframes loading {
+    to {
+      transform: rotate(360deg);
+    }
   }
 }
 </style>

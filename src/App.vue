@@ -1,6 +1,6 @@
 <template>
   <Transition name="fade">
-    <Loader class="loader" v-if="loading" />
+    <Loader class="waiting-screen" v-if="loading" />
   </Transition>
   <Map v-if="!isMobile" />
   <Stories />
@@ -65,7 +65,7 @@ export default {
     height: var(--vh);
   }
 
-  .loader {
+  .waiting-screen {
     position: fixed;
     top: 0;
     left: 0;

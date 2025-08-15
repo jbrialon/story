@@ -31,7 +31,7 @@ export const useStoryStore = defineStore("story", {
 
     setStories(stories) {
       this.stories = stories;
-      this.storiesLoading = new Array(stories.length).fill(false);
+      this.storiesLoading = new Array(stories.length).fill(true);
       this.storyData = new Array(stories.length).fill(null);
     },
 
@@ -84,7 +84,7 @@ export const useStoryStore = defineStore("story", {
         this.setStories(sortedStories);
 
         // Preload cover images
-        const coverImages = sortedStories
+        const coverImages = this.stories
           .filter((story) => story.cover)
           .map((story) => getMediaUrl(story.id, story.cover));
 
@@ -92,9 +92,9 @@ export const useStoryStore = defineStore("story", {
         setStoriesListHeight();
 
         // Automatically fetch data for the current story index
-        if (sortedStories.length > 0) {
-          sortedStories.forEach(async (story, index) => {
-            this.fetchStoryData(index); // Don't await here to avoid blocking
+        if (this.stories.length > 0) {
+          this.stories.forEach(async (story, index) => {
+            this.fetchStoryData(story, index);
           });
         }
 
@@ -107,15 +107,8 @@ export const useStoryStore = defineStore("story", {
       }
     },
 
-    async fetchStoryData(storyIndex) {
+    async fetchStoryData(story, index) {
       try {
-        this.setStoryLoading(storyIndex, true);
-
-        const story = this.stories[storyIndex];
-        if (!story) {
-          throw new Error(`Story at index ${storyIndex} not found`);
-        }
-
         const response = await fetch(`${apiUrl}/story/${story.id}`);
 
         if (!response.ok) {
@@ -145,20 +138,20 @@ export const useStoryStore = defineStore("story", {
             }),
         };
 
-        this.setStoryData(storyIndex, formattedData);
+        this.setStoryData(index, formattedData);
 
         // Preload the photos for the stories
-        const photos = formattedData.medias
-          .filter((media) => media.type === "photo")
-          .map((media) => getMediaUrl(story.id, media.src));
+        const medias = formattedData.medias.map((media) =>
+          getMediaUrl(story.id, media.src)
+        );
 
-        await Preloader.load(photos);
+        await Preloader.load(medias);
         return formattedData;
       } catch (error) {
         console.error("Error fetching story data:", error);
         throw error;
       } finally {
-        this.setStoryLoading(storyIndex, false);
+        this.setStoryLoading(index, false);
       }
     },
   },
