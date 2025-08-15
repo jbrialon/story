@@ -42,7 +42,7 @@ export default {
 
       markerElement.addEventListener("click", () => {
         if (this.storyStore.storiesLoading[index] === false) {
-          this.storyStore.setCurrentStoryIndex(index);
+          // this.storyStore.setCurrentStoryIndex(index);
         }
       });
 
@@ -104,11 +104,8 @@ export default {
         marker.element.classList.add("hide");
       });
 
-      this.storyMarkers.forEach((marker) => {
-        // todo should only show the active story markers
-        marker.forEach((marker) => {
-          marker.element.classList.add("active");
-        });
+      this.storyMarkers[this.activeStoryIndex].forEach((marker) => {
+        marker.element.classList.add("active");
       });
     },
     showStoriesMarkers() {
@@ -116,11 +113,8 @@ export default {
         marker.element.classList.remove("hide");
       });
 
-      this.storyMarkers.forEach((marker) => {
-        // todo should only hide the active markers
-        marker.forEach((marker) => {
-          marker.element.classList.remove("active");
-        });
+      this.storyMarkers[this.activeStoryIndex]?.forEach((marker) => {
+        marker.element.classList.remove("active");
       });
 
       this.fitBounds();
@@ -138,6 +132,9 @@ export default {
   computed: {
     storiesData() {
       return this.storyStore.storyData;
+    },
+    activeStoryIndex() {
+      return this.storyStore.currentStoryIndex;
     },
   },
   watch: {
@@ -218,8 +215,10 @@ export default {
   }
 
   &__marker {
+    pointer-events: none;
+
     &.loaded {
-      cursor: pointer;
+      // cursor: pointer;
 
       .map__marker-circle {
         transform: scale(1);
