@@ -209,7 +209,7 @@ export default {
     position: relative;
     border-radius: 50%;
     padding: 6px;
-    transition: transform 300ms $easing;
+    transition: transform 600ms $easing;
     transform: scale(0);
 
     &:before {
@@ -273,7 +273,7 @@ export default {
     position: absolute;
     top: 70px;
     opacity: 0;
-    transition: opacity 300ms $easing;
+    transition: opacity 600ms $easing 600ms;
 
     @include small-only {
       display: none;

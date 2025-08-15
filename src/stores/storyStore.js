@@ -90,18 +90,17 @@ export const useStoryStore = defineStore("story", {
 
         await Preloader.load(coverImages);
 
+        // For instead of ForEach to load stories sequentially
+        for (let i = 0; i < this.stories.length; i++) {
+          await this.fetchStoryData(this.stories[i], i);
+        }
+
         return this.stories;
       } catch (error) {
         console.error("Error loading stories:", error);
         throw error;
       } finally {
         setStoriesListHeight();
-        // Automatically fetch data for the current story index
-        if (this.stories.length > 0) {
-          this.stories.forEach(async (story, index) => {
-            this.fetchStoryData(story, index);
-          });
-        }
       }
     },
 
