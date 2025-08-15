@@ -89,6 +89,7 @@ export const useStoryStore = defineStore("story", {
           .map((story) => getMediaUrl(story.id, story.cover));
 
         await Preloader.load(coverImages);
+        setStoriesListHeight();
 
         // For instead of ForEach to load stories sequentially
         for (let i = 0; i < this.stories.length; i++) {
@@ -100,7 +101,6 @@ export const useStoryStore = defineStore("story", {
         console.error("Error loading stories:", error);
         throw error;
       } finally {
-        setStoriesListHeight();
       }
     },
 
