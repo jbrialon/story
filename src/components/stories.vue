@@ -75,13 +75,13 @@ export default {
         v-for="(story, index) in stories"
         :key="story.id"
         class="stories__item"
+        :class="{ loaded: storiesLoading[index] === false }"
       >
         <button class="stories__button" @click="selectStory(index)">
           <span
             class="stories__image"
             :class="{
               viewed: storyViewed.includes(story.id),
-              loading: storiesLoading[index],
             }"
           >
             <img
@@ -171,6 +171,15 @@ export default {
   &__item {
     display: block;
     line-height: 0;
+
+    &.loaded {
+      .stories__image {
+        transform: scale(1);
+      }
+      .stories__name {
+        opacity: 1;
+      }
+    }
   }
 
   &__button {
@@ -200,7 +209,8 @@ export default {
     position: relative;
     border-radius: 50%;
     padding: 6px;
-    transition: all 900ms $easing;
+    transition: transform 300ms $easing;
+    transform: scale(0);
 
     &:before {
       content: "";
@@ -225,7 +235,7 @@ export default {
 
     &.loading {
       &:before {
-        animation: loading 2000ms infinite ease-in;
+        // TODO: add loading animation
       }
     }
 
@@ -262,6 +272,8 @@ export default {
     margin-top: 10px;
     position: absolute;
     top: 70px;
+    opacity: 0;
+    transition: opacity 300ms $easing;
 
     @include small-only {
       display: none;
@@ -332,12 +344,6 @@ export default {
 
   .cube-effect-prev-leave-to {
     transform: rotateY(90deg);
-  }
-
-  @keyframes loading {
-    to {
-      transform: rotate(360deg);
-    }
   }
 }
 </style>

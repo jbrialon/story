@@ -89,21 +89,19 @@ export const useStoryStore = defineStore("story", {
           .map((story) => getMediaUrl(story.id, story.cover));
 
         await Preloader.load(coverImages);
-        setStoriesListHeight();
 
+        return this.stories;
+      } catch (error) {
+        console.error("Error loading stories:", error);
+        throw error;
+      } finally {
+        setStoriesListHeight();
         // Automatically fetch data for the current story index
         if (this.stories.length > 0) {
           this.stories.forEach(async (story, index) => {
             this.fetchStoryData(story, index);
           });
         }
-
-        return sortedStories;
-      } catch (error) {
-        console.error("Error loading stories:", error);
-        throw error;
-      } finally {
-        this.setLoading(false);
       }
     },
 
@@ -151,6 +149,10 @@ export const useStoryStore = defineStore("story", {
         console.error("Error fetching story data:", error);
         throw error;
       } finally {
+        // we hide the loader when the first story is loaded
+        if (index === 0) {
+          this.setLoading(false);
+        }
         this.setStoryLoading(index, false);
       }
     },
