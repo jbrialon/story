@@ -75,7 +75,10 @@ export default {
         v-for="(story, index) in stories"
         :key="story.id"
         class="stories__item"
-        :class="{ loaded: storiesLoading[index] === false }"
+        :class="{
+          loaded: storiesLoading[index] === false,
+          loading: storiesLoading[index] === true,
+        }"
       >
         <button class="stories__button" @click="selectStory(index)">
           <span
@@ -107,8 +110,8 @@ export default {
             "
           >
             <Story
-              v-show="currentIndex === index"
-              :story="story"
+              v-if="currentIndex === index"
+              :storyId="story.id"
               :index="index"
               class="stories__slide"
               ref="stories"
@@ -170,7 +173,34 @@ export default {
 
   &__item {
     display: block;
+    position: relative;
     line-height: 0;
+
+    &:before {
+      content: "";
+      position: absolute;
+      top: 1px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 50%;
+      background: $c-grey-light;
+      width: 72px;
+      height: 72px;
+      opacity: 0;
+      background: linear-gradient(45deg, #eeeeee 10%, #dddddd 18%, #eeeeee 33%);
+      background-size: 800px 72px;
+      transition: opacity 0.3s $easing;
+      animation: none;
+    }
+
+    @keyframes loading {
+      0% {
+        background-position: -400px 0;
+      }
+      100% {
+        background-position: 400px 0;
+      }
+    }
 
     &.loaded {
       .stories__image {
@@ -182,6 +212,13 @@ export default {
 
       .stories__button {
         cursor: pointer;
+      }
+    }
+
+    &.loading {
+      &:before {
+        opacity: 1;
+        animation: loading 2000ms infinite;
       }
     }
   }

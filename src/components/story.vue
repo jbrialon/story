@@ -7,8 +7,8 @@ import Loader from "./loader.vue";
 export default {
   name: "Story",
   props: {
-    story: {
-      type: Object,
+    storyId: {
+      type: String,
       required: true,
     },
     index: {
@@ -75,14 +75,14 @@ export default {
   },
   methods: {
     getMediaUrl(src) {
-      return getMediaUrl(this.story.id, src);
+      return getMediaUrl(this.storyId, src);
     },
     next() {
       if (this.currentIndex < this.storyData.medias.length - 1) {
         this.currentIndex++;
       } else {
         // Navigate to next story
-        this.$emit("next-story", this.story.id);
+        this.$emit("next-story", this.storyId);
       }
     },
     prev() {
@@ -90,7 +90,7 @@ export default {
         this.currentIndex--;
       } else {
         // Navigate to previous story
-        this.$emit("prev-story", this.story.id);
+        this.$emit("prev-story", this.storyId);
       }
     },
     getClass(photo) {
@@ -143,7 +143,7 @@ export default {
         </div>
         <div class="story__header">
           <div class="story__header-title">
-            {{ story.name }}
+            {{ storyData.name }}
           </div>
           <div class="story__header-date">
             {{ storyData.medias[currentIndex].exif.formattedDate }}
@@ -172,7 +172,7 @@ export default {
               <img
                 :key="`photo-${index}`"
                 :src="getMediaUrl(media.src)"
-                :alt="story.id"
+                :alt="storyData.story.name"
               />
             </template>
             <template v-else>
@@ -181,13 +181,16 @@ export default {
                 :poster="getMediaUrl(media.poster)"
                 :key="`video-${index}`"
                 :src="getMediaUrl(media.src)"
-                :alt="story.id"
+                :alt="storyData.story.name"
                 loop
                 playsinline
                 preload="metadata"
               />
             </template>
-            <ul class="story__media-description">
+            <ul
+              class="story__media-description"
+              v-if="media.exif.description.length > 0"
+            >
               <li v-for="(desc, index) in media.exif.description" :key="index">
                 {{ desc }}
               </li>

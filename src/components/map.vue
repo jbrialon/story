@@ -93,6 +93,46 @@ export default {
           element: markerElement,
         });
       });
+
+      // Add path to map
+      story.stats.forEach((stat, statIndex) => {
+        const segments = stat.path.tracks[0].segments[0];
+        const coordinates = segments.map((segment) => [
+          segment.lon,
+          segment.lat,
+        ]);
+
+        // Add the line source
+        this.map.addSource(`path-${index}-${statIndex}`, {
+          type: "geojson",
+          data: {
+            type: "Feature",
+            properties: {},
+            geometry: {
+              type: "LineString",
+              coordinates: coordinates,
+            },
+          },
+        });
+
+        // Add the line layer
+        this.map.addLayer({
+          id: `path-${index}-${statIndex}`,
+          type: "line",
+          source: `path-${index}-${statIndex}`,
+          layout: {
+            "line-join": "round",
+            "line-cap": "round",
+          },
+          paint: {
+            "line-color": "#667eea",
+            "line-width": 3,
+            "line-opacity": 1,
+            "line-dasharray": [2, 2],
+            "line-blur": 1,
+          },
+        });
+      });
     },
     getStoryMarker(storyIndex) {
       return this.storiesMarkers.find(
