@@ -17,9 +17,7 @@ export default {
     },
   },
   data() {
-    return {
-      currentIndex: 0,
-    };
+    return {};
   },
   setup() {
     const storyStore = useStoryStore();
@@ -27,48 +25,19 @@ export default {
   },
   components: { Loader },
   computed: {
-    isCurrentStory() {
-      return this.storyStore.currentStoryIndex === this.index;
-    },
     storyData() {
       return this.storyStore.getStoryData(this.index);
     },
     loading() {
       return this.storyStore.getStoryLoading(this.index);
     },
+    currentMediaIndex() {
+      return this.storyStore.mediaIndex[this.index];
+    },
   },
   watch: {
-    isCurrentStory(isCurrent) {
-      if (isCurrent && this.storyData) {
-        const currentPhoto = this.storyData.medias[this.currentIndex];
-        if (!currentPhoto) return;
-
-        const hasGps = !!(currentPhoto.exif && currentPhoto.exif.GPS);
-        if (hasGps) {
-          this.storyStore.setActivePhoto({
-            latitude: currentPhoto.exif.GPS.latitude,
-            longitude: currentPhoto.exif.GPS.longitude,
-          });
-        } else {
-          this.storyStore.clearActivePhoto();
-        }
-      }
-    },
-    currentIndex(index) {
+    currentMediaIndex() {
       if (!this.storyData) return;
-
-      const currentPhoto = this.storyData.medias[index];
-      if (!currentPhoto) return;
-
-      const hasGps = !!(currentPhoto.exif && currentPhoto.exif.GPS);
-      if (hasGps) {
-        this.storyStore.setActivePhoto({
-          latitude: currentPhoto.exif.GPS.latitude,
-          longitude: currentPhoto.exif.GPS.longitude,
-        });
-      } else {
-        this.storyStore.clearActivePhoto();
-      }
 
       this.controlVideoPlayback();
     },
@@ -78,20 +47,10 @@ export default {
       return getMediaUrl(this.storyId, src);
     },
     next() {
-      if (this.currentIndex < this.storyData.medias.length - 1) {
-        this.currentIndex++;
-      } else {
-        // Navigate to next story
-        this.$emit("next-story", this.storyId);
-      }
+      this.storyStore.nextMedia();
     },
     prev() {
-      if (this.currentIndex > 0) {
-        this.currentIndex--;
-      } else {
-        // Navigate to previous story
-        this.$emit("prev-story", this.storyId);
-      }
+      this.storyStore.prevMedia();
     },
     getClass(photo) {
       let landscape = photo.size.width > photo.size.height;
@@ -105,7 +64,7 @@ export default {
           const videoElement = this.$refs[`video-${index}`];
           if (videoElement && videoElement.length > 0) {
             const video = videoElement[0];
-            if (index === this.currentIndex) {
+            if (index === this.currentMediaIndex) {
               // Play video if it's the current index
               video.currentTime = 0; // Reset to start
               video.play();
@@ -136,7 +95,7 @@ export default {
           >
             <span
               class="story__pagination-bullet-progress"
-              :style="{ width: index - 1 <= currentIndex ? '100%' : '0%' }"
+              :style="{ width: index - 1 <= currentMediaIndex ? '100%' : '0%' }"
             >
             </span>
           </span>
@@ -146,7 +105,7 @@ export default {
             {{ storyData.name }}
           </div>
           <div class="story__header-date">
-            {{ storyData.medias[currentIndex].exif.formattedDate }}
+            {{ storyData.medias[currentMediaIndex].exif.formattedDate }}
           </div>
         </div>
         <div class="story__navigation">
@@ -164,7 +123,7 @@ export default {
             class="story__media"
             v-for="(media, index) in storyData.medias"
             :class="{
-              show: index === currentIndex,
+              show: index === currentMediaIndex,
               [getClass(media)]: true,
             }"
           >
@@ -217,7 +176,6 @@ $z-navigation: 30;
   position: absolute;
   top: 0;
   left: 0;
-  backface-visibility: hidden;
   transform-origin: center center calc($stories-width / 2 * -1);
 
   @include small-only {
@@ -341,7 +299,6 @@ $z-navigation: 30;
     display: flex;
     justify-content: space-between;
     z-index: $z-pagination;
-    transform: translateZ(0);
 
     &-bullet {
       width: 100%;
@@ -382,7 +339,7 @@ $z-navigation: 30;
     color: #fff;
     text-decoration: none;
     user-select: none;
-    transform: translateZ(0);
+    backface-visibility: hidden;
 
     &-title {
       font-size: 14px;

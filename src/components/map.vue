@@ -21,16 +21,86 @@ export default {
         zoom: 3,
         bounds: new mapboxgl.LngLatBounds(),
       },
-      storiesMarkers: [],
       storyMarkers: [],
+      mediaMarkers: [],
     };
+  },
+  computed: {
+    storiesData() {
+      return this.storyStore.storyData;
+    },
+    currentStoryIndex() {
+      return this.storyStore.currentStoryIndex;
+    },
+  },
+  watch: {
+    "storyStore.stories": {
+      handler(stories) {
+        if (stories && stories.length > 0) {
+          stories.forEach((story, index) => {
+            if (story.location) {
+              this.createStoryMarker(story, index);
+            }
+          });
+          this.fitBounds();
+        }
+      },
+      deep: true,
+    },
+    "storyStore.storiesLoading": {
+      handler(storiesLoading) {
+        storiesLoading.forEach((loading, index) => {
+          if (loading === false) {
+            const marker = this.getStoryMarker(index);
+            if (marker) {
+              marker.element.classList.add("loaded");
+              // when a story is loaded, create the media markers
+              this.createMediaMarkers(index);
+            }
+          }
+        });
+      },
+      deep: true,
+    },
+    "storyStore.currentStoryIndex": {
+      handler(currentStoryIndex) {
+        console.log("Story Has Changed to", currentStoryIndex);
+      },
+      deep: true,
+    },
+    "storyStore.mediaIndex": {
+      handler(mediaIndex) {
+        console.log("Media Has Changed to", mediaIndex[this.currentStoryIndex]);
+        const media =
+          this.storiesData[this.currentStoryIndex]?.medias[
+            mediaIndex[this.currentStoryIndex]
+          ];
+        console.log(media?.exif.GPS);
+      },
+      deep: true,
+    },
+    // TODO: make this work
+    // "storyStore.activePhoto": {
+    //   handler(newPhotoData) {
+    //     if (newPhotoData && this.map) {
+    //       this.hidestoryMarkers();
+    //       this.map.flyTo({
+    //         center: [newPhotoData.longitude, newPhotoData.latitude],
+    //         zoom: 12,
+    //         duration: 2000,
+    //       });
+    //     } else if (this.storyMarkers && this.map) {
+    //       this.showstoryMarkers();
+    //     }
+    //   },
+    // },
   },
   methods: {
     getMediaUrl(story) {
       return getMediaUrl(story.id, story.cover);
     },
     // Main Markers for the stories
-    createStoriesMarker(story, index) {
+    createStoryMarker(story, index) {
       const markerElement = document.createElement("div");
       const cover = this.getMediaUrl(story);
       markerElement.className = "map__marker";
@@ -41,9 +111,7 @@ export default {
       `;
 
       markerElement.addEventListener("click", () => {
-        if (this.storyStore.storiesLoading[index] === false) {
-          // this.storyStore.setCurrentStoryIndex(index);
-        }
+        // this.storyStore.setCurrentStoryIndex(index);
       });
 
       const marker = new mapboxgl.Marker(markerElement);
@@ -54,7 +122,7 @@ export default {
       marker.setLngLat(coord);
       marker.addTo(this.map);
 
-      this.storiesMarkers.push({
+      this.storyMarkers.push({
         marker: marker,
         element: markerElement,
         storyIndex: index,
@@ -68,11 +136,11 @@ export default {
       return marker;
     },
     // Markers for the story (medias of the story)
-    createStoryMarker(index) {
+    createMediaMarkers(index) {
       const story = this.storiesData[index];
-      if (this.storyMarkers[index]) return;
+      if (this.mediaMarkers[index]) return;
 
-      this.storyMarkers[index] = [];
+      this.mediaMarkers[index] = [];
 
       story.medias.forEach((media) => {
         const markerElement = document.createElement("div");
@@ -88,136 +156,89 @@ export default {
         marker.setLngLat(coord);
         marker.addTo(this.map);
 
-        this.storyMarkers[index].push({
+        this.mediaMarkers[index].push({
           marker: marker,
           element: markerElement,
         });
       });
 
       // Add path to map
-      story.stats.forEach((stat, statIndex) => {
-        const segments = stat.path.tracks[0].segments[0];
-        const coordinates = segments.map((segment) => [
-          segment.lon,
-          segment.lat,
-        ]);
+      // story.stats.forEach((stat, statIndex) => {
+      //   const segments = stat.path.tracks[0].segments[0];
+      //   const coordinates = segments.map((segment) => [
+      //     segment.lon,
+      //     segment.lat,
+      //   ]);
 
-        // Add the line source
-        this.map.addSource(`path-${index}-${statIndex}`, {
-          type: "geojson",
-          data: {
-            type: "Feature",
-            properties: {},
-            geometry: {
-              type: "LineString",
-              coordinates: coordinates,
-            },
-          },
-        });
+      //   // Add the line source
+      //   this.map.addSource(`path-${index}-${statIndex}`, {
+      //     type: "geojson",
+      //     data: {
+      //       type: "Feature",
+      //       properties: {},
+      //       geometry: {
+      //         type: "LineString",
+      //         coordinates: coordinates,
+      //       },
+      //     },
+      //   });
 
-        // Add the line layer
-        this.map.addLayer({
-          id: `path-${index}-${statIndex}`,
-          type: "line",
-          source: `path-${index}-${statIndex}`,
-          layout: {
-            "line-join": "round",
-            "line-cap": "round",
-          },
-          paint: {
-            "line-color": "#667eea",
-            "line-width": 3,
-            "line-opacity": 1,
-            "line-dasharray": [2, 2],
-            "line-blur": 1,
-          },
-        });
-      });
+      //   // Add the line layer
+      //   this.map.addLayer({
+      //     id: `path-${index}-${statIndex}`,
+      //     type: "line",
+      //     source: `path-${index}-${statIndex}`,
+      //     layout: {
+      //       "line-join": "round",
+      //       "line-cap": "round",
+      //     },
+      //     paint: {
+      //       "line-color": "#667eea",
+      //       "line-width": 3,
+      //       "line-opacity": 1,
+      //       "line-dasharray": [2, 2],
+      //       "line-blur": 1,
+      //     },
+      //   });
+      // });
     },
     getStoryMarker(storyIndex) {
-      return this.storiesMarkers.find(
+      return this.storyMarkers.find(
         (marker) => marker.storyIndex === storyIndex
       );
     },
-    hideStoriesMarkers() {
-      this.storiesMarkers.forEach((marker) => {
+    hidestoryMarkers() {
+      this.storyMarkers.forEach((marker) => {
         marker.element.classList.add("hide");
       });
 
-      this.storyMarkers[this.activeStoryIndex].forEach((marker) => {
+      this.mediaMarkers[this.currentStoryIndex]?.forEach((marker) => {
         marker.element.classList.add("active");
       });
     },
-    showStoriesMarkers() {
-      this.storiesMarkers.forEach((marker) => {
+    showstoryMarkers() {
+      this.storyMarkers.forEach((marker) => {
         marker.element.classList.remove("hide");
       });
 
-      this.storyMarkers[this.activeStoryIndex]?.forEach((marker) => {
-        marker.element.classList.remove("active");
+      this.mediaMarkers.forEach((markers) => {
+        if (markers.length > 0) {
+          markers.forEach((marker) => {
+            marker.element.classList.remove("active");
+          });
+        }
       });
 
       this.fitBounds();
     },
     fitBounds() {
-      if (this.storiesMarkers.length === 0) return;
+      if (this.storyMarkers.length === 0) return;
 
       this.map.fitBounds(this.mapOptions.bounds, {
         padding: { top: 50, bottom: 50, left: 600, right: 100 }, // hardcoded values for now
         duration: 1000,
         maxZoom: 15,
       });
-    },
-  },
-  computed: {
-    storiesData() {
-      return this.storyStore.storyData;
-    },
-    activeStoryIndex() {
-      return this.storyStore.currentStoryIndex;
-    },
-  },
-  watch: {
-    "storyStore.stories": {
-      handler(stories) {
-        if (stories && stories.length > 0) {
-          stories.forEach((story, index) => {
-            if (story.location) {
-              this.createStoriesMarker(story, index);
-            }
-          });
-          this.fitBounds();
-        }
-      },
-      deep: true,
-    },
-    "storyStore.storiesLoading": {
-      handler(storiesLoading) {
-        storiesLoading.forEach((loading, index) => {
-          if (loading === false) {
-            const marker = this.getStoryMarker(index);
-            if (marker) {
-              marker.element.classList.add("loaded");
-              this.createStoryMarker(index);
-            }
-          }
-        });
-      },
-      deep: true,
-    },
-    "storyStore.activePhoto": {
-      handler(newPhotoData) {
-        if (newPhotoData && this.map) {
-          this.hideStoriesMarkers();
-          this.map.flyTo({
-            center: [newPhotoData.longitude, newPhotoData.latitude],
-            zoom: 12,
-            duration: 2000,
-          });
-        } else if (this.storiesMarkers && this.map) {
-          this.showStoriesMarkers();
-        }
-      },
     },
   },
   mounted() {

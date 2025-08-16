@@ -12,8 +12,8 @@ export default {
   },
   data() {
     return {
+      // TODO: make this work
       storyViewed: [],
-      transitionDirection: -1,
     };
   },
   components: {
@@ -29,40 +29,20 @@ export default {
     storiesLoading() {
       return this.storyStore.storiesLoading;
     },
+    transitionDirection() {
+      return this.storyStore.transitionDirection;
+    },
   },
   methods: {
     selectStory(index) {
-      if (this.currentIndex === index || this.storiesLoading[index]) return;
-
-      this.transitionDirection = index > this.currentIndex ? 1 : -1;
       this.storyStore.setCurrentStoryIndex(index);
-    },
-    nextStory() {
-      if (this.currentIndex === this.stories.length - 1) return;
-
-      this.transitionDirection = 1;
-      this.storyStore.setCurrentStoryIndex(this.currentIndex + 1);
-    },
-    prevStory() {
-      if (this.currentIndex === 0) return;
-
-      this.transitionDirection = -1;
-      this.storyStore.setCurrentStoryIndex(this.currentIndex - 1);
     },
     getMediaUrl(story) {
       return getMediaUrl(story.id, story.cover);
     },
-    handleNextStory(storyId) {
-      if (!this.storyViewed.includes(storyId)) {
-        this.storyViewed.push(storyId);
-      }
-      this.nextStory();
-    },
-    handlePrevStory(storyId) {
-      if (!this.storyViewed.includes(storyId)) {
-        this.storyViewed.push(storyId);
-      }
-      this.prevStory();
+    onAfterLeave() {
+      // after we leave the story, reset the media index to 0 so when we go back we start at the first media
+      this.storyStore.resetMediaIndex();
     },
   },
 };
@@ -108,15 +88,13 @@ export default {
                 ? 'cube-effect-next'
                 : 'cube-effect-prev'
             "
+            @after-leave="onAfterLeave"
           >
             <Story
               v-if="currentIndex === index"
               :storyId="story.id"
               :index="index"
               class="stories__slide"
-              ref="stories"
-              @next-story="handleNextStory"
-              @prev-story="handlePrevStory"
             />
           </Transition>
         </template>

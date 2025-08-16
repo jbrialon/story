@@ -8,35 +8,84 @@ const apiUrl = import.meta.env.VITE_API_URL;
 
 export const useStoryStore = defineStore("story", {
   state: () => ({
-    activePhoto: null,
     currentStoryIndex: 0,
+    transitionDirection: 1,
     stories: [],
     loading: true,
     storiesLoading: [], // Array to track loading state for individual stories
     storyData: [], // Array to store individual story data by story index
+    mediaIndex: [],
   }),
 
   actions: {
-    setActivePhoto(photo) {
-      this.activePhoto = photo;
+    setLoading(loading) {
+      this.loading = loading;
     },
 
-    clearActivePhoto() {
-      this.activePhoto = null;
-    },
-
+    // ------------------------------
+    // Story navigation
+    // ------------------------------
     setCurrentStoryIndex(index) {
+      if (this.currentStoryIndex === index || this.storiesLoading[index])
+        return;
+
+      this.transitionDirection = index > this.currentStoryIndex ? 1 : -1;
       this.currentStoryIndex = index;
     },
 
+    nextStory() {
+      if (this.currentStoryIndex === this.stories.length - 1) return;
+
+      this.transitionDirection = 1;
+      this.currentStoryIndex++;
+    },
+
+    prevStory() {
+      if (this.currentStoryIndex === 0) return;
+
+      this.transitionDirection = -1;
+      this.currentStoryIndex--;
+    },
+
+    // ------------------------------
+    // media navigation
+    // ------------------------------
+    setMediaIndex(index) {
+      this.mediaIndex[this.currentStoryIndex] = index;
+    },
+
+    nextMedia() {
+      if (
+        this.mediaIndex[this.currentStoryIndex] <
+        this.storyData[this.currentStoryIndex].medias.length - 1
+      ) {
+        this.mediaIndex[this.currentStoryIndex]++;
+      } else {
+        this.nextStory();
+      }
+    },
+
+    prevMedia() {
+      if (this.mediaIndex[this.currentStoryIndex] > 0) {
+        this.mediaIndex[this.currentStoryIndex]--;
+      } else {
+        this.prevStory();
+      }
+    },
+
+    resetMediaIndex() {
+      this.mediaIndex = this.mediaIndex.map((_, index) =>
+        index === this.currentStoryIndex ? this.mediaIndex[index] : 0
+      );
+    },
+    // ------------------------------
+    // Stories & Loading
+    // ------------------------------
     setStories(stories) {
       this.stories = stories;
       this.storiesLoading = new Array(stories.length).fill(true);
       this.storyData = new Array(stories.length).fill(null);
-    },
-
-    setLoading(loading) {
-      this.loading = loading;
+      this.mediaIndex = new Array(stories.length).fill(0);
     },
 
     setStoryLoading(storyIndex, loading) {
