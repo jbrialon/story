@@ -1,5 +1,5 @@
 <template>
-  <Transition name="fade">
+  <Transition name="fade" @after-leave="onLoadingTransitionComplete">
     <Loader class="waiting-screen" v-if="loading" />
   </Transition>
   <Map v-if="!isMobile" />
@@ -35,6 +35,11 @@ export default {
     },
     loading() {
       return this.storyStore.isLoading;
+    },
+  },
+  methods: {
+    onLoadingTransitionComplete() {
+      this.storyStore.setLoadingTransitionComplete(true);
     },
   },
   async mounted() {

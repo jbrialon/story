@@ -18,7 +18,7 @@ export default {
           "pk.eyJ1IjoiamJyaWFsb24iLCJhIjoiZjJkNjkyNDNiMzU0YjAxY2FjNGZlMjU3MGFiYjYyZmQifQ.lwFTmFgGxSuvfoJdTcx7Jg",
         style: "mapbox://styles/jbrialon/ck3yg7nb807lc1co990hb80mi/draft",
         center: [2.465, 44.95017765091265],
-        zoom: 3,
+        zoom: 4,
         bounds: new mapboxgl.LngLatBounds(),
       },
       storyMarkers: [],
@@ -42,7 +42,6 @@ export default {
               this.createStoryMarker(story, index);
             }
           });
-          this.fitBounds();
         }
       },
       deep: true,
@@ -83,17 +82,26 @@ export default {
     // "storyStore.activePhoto": {
     //   handler(newPhotoData) {
     //     if (newPhotoData && this.map) {
-    //       this.hidestoryMarkers();
+    //       this.hideStoryMarkers();
     //       this.map.flyTo({
     //         center: [newPhotoData.longitude, newPhotoData.latitude],
     //         zoom: 12,
     //         duration: 2000,
     //       });
     //     } else if (this.storyMarkers && this.map) {
-    //       this.showstoryMarkers();
+    //       this.showStoryMarkers();
     //     }
     //   },
     // },
+    "storyStore.loadingTransitionComplete": {
+      handler(complete) {
+        // when loading transition is complete we trigger the reveal animation
+        if (complete) {
+          this.fitBounds();
+        }
+      },
+      immediate: true,
+    },
   },
   methods: {
     getMediaUrl(story) {
@@ -207,7 +215,7 @@ export default {
         (marker) => marker.storyIndex === storyIndex
       );
     },
-    hidestoryMarkers() {
+    hideStoryMarkers() {
       this.storyMarkers.forEach((marker) => {
         marker.element.classList.add("hide");
       });
@@ -216,7 +224,7 @@ export default {
         marker.element.classList.add("active");
       });
     },
-    showstoryMarkers() {
+    showStoryMarkers() {
       this.storyMarkers.forEach((marker) => {
         marker.element.classList.remove("hide");
       });

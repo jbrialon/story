@@ -8,10 +8,11 @@ const apiUrl = import.meta.env.VITE_API_URL;
 
 export const useStoryStore = defineStore("story", {
   state: () => ({
+    loading: true,
+    loadingTransitionComplete: false,
     currentStoryIndex: 0,
     transitionDirection: 1,
     stories: [],
-    loading: true,
     storiesLoading: [], // Array to track loading state for individual stories
     storyData: [], // Array to store individual story data by story index
     mediaIndex: [],
@@ -20,6 +21,10 @@ export const useStoryStore = defineStore("story", {
   actions: {
     setLoading(loading) {
       this.loading = loading;
+    },
+
+    setLoadingTransitionComplete(complete) {
+      this.loadingTransitionComplete = complete;
     },
 
     // ------------------------------
@@ -234,5 +239,6 @@ export const useStoryStore = defineStore("story", {
       state.storiesLoading[storyIndex] || false,
     getStoryData: (state) => (storyIndex) =>
       state.storyData[storyIndex] || null,
+    isLoadingTransitionComplete: (state) => state.loadingTransitionComplete,
   },
 });

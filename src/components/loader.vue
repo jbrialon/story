@@ -1,7 +1,5 @@
 <template>
-  <Transition name="fade">
-    <div class="loader"></div>
-  </Transition>
+  <div class="loader"></div>
 </template>
 
 <script>
