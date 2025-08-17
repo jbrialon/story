@@ -102,7 +102,7 @@ export default {
         </div>
         <div class="story__header">
           <div class="story__header-title">
-            {{ storyData.name }}
+            {{ storyData.story.name }}
           </div>
           <div class="story__header-date">
             {{ storyData.medias[currentMediaIndex].exif.formattedDate }}

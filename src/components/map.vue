@@ -23,6 +23,8 @@ export default {
       },
       storyMarkers: [],
       mediaMarkers: [],
+      storyPaths: [],
+      boundsPaths: [],
     };
   },
   computed: {
@@ -63,36 +65,46 @@ export default {
     },
     "storyStore.currentStoryIndex": {
       handler(currentStoryIndex) {
-        console.log("Story Has Changed to", currentStoryIndex);
+        const stats = this.storiesData[currentStoryIndex].stats;
+        if (stats && stats.length > 0) {
+          // if we have stats, show the media markers and hide the story markers
+          this.showMediaMarkers();
+          this.hideStoryMarkers();
+        } else {
+          // if we don't have stats, hide the media markers and show the story markers
+          this.hideMediaMarkers();
+          this.showStoryMarkers();
+        }
       },
       deep: true,
     },
     "storyStore.mediaIndex": {
       handler(mediaIndex) {
-        console.log("Media Has Changed to", mediaIndex[this.currentStoryIndex]);
+        const stats = this.storiesData[this.currentStoryIndex]?.stats;
+
         const media =
           this.storiesData[this.currentStoryIndex]?.medias[
             mediaIndex[this.currentStoryIndex]
           ];
-        console.log(media?.exif.GPS);
+
+        if (stats && stats.length > 0) {
+          if (mediaIndex[this.currentStoryIndex] === 0) {
+            this.showStoryPath();
+          } else {
+            if (media?.exif.GPS) {
+              this.map.flyTo({
+                center: [media.exif.GPS.longitude, media.exif.GPS.latitude],
+                zoom: 12,
+                duration: 2000,
+              });
+            }
+          }
+        } else {
+          this.hideStoryPath();
+        }
       },
       deep: true,
     },
-    // TODO: make this work
-    // "storyStore.activePhoto": {
-    //   handler(newPhotoData) {
-    //     if (newPhotoData && this.map) {
-    //       this.hideStoryMarkers();
-    //       this.map.flyTo({
-    //         center: [newPhotoData.longitude, newPhotoData.latitude],
-    //         zoom: 12,
-    //         duration: 2000,
-    //       });
-    //     } else if (this.storyMarkers && this.map) {
-    //       this.showStoryMarkers();
-    //     }
-    //   },
-    // },
     "storyStore.loadingTransitionComplete": {
       handler(complete) {
         // when loading transition is complete we trigger the reveal animation
@@ -107,7 +119,18 @@ export default {
     getMediaUrl(story) {
       return getMediaUrl(story.id, story.cover);
     },
-    // Main Markers for the stories
+    fitBounds() {
+      if (this.storyMarkers.length === 0) return;
+
+      this.map.fitBounds(this.mapOptions.bounds, {
+        padding: { top: 50, bottom: 50, left: 600, right: 100 }, // hardcoded values for now
+        duration: 1000,
+        maxZoom: 15,
+      });
+    },
+    // ------------------------------------------------------------
+    // Story markers management (Main Markers for the stories)
+    // ------------------------------------------------------------
     createStoryMarker(story, index) {
       const markerElement = document.createElement("div");
       const cover = this.getMediaUrl(story);
@@ -143,16 +166,36 @@ export default {
 
       return marker;
     },
-    // Markers for the story (medias of the story)
-    createMediaMarkers(index) {
-      const story = this.storiesData[index];
-      if (this.mediaMarkers[index]) return;
+    showStoryMarkers() {
+      this.storyMarkers.forEach((marker) => {
+        marker.element.classList.remove("hide");
+      });
 
-      this.mediaMarkers[index] = [];
+      this.fitBounds();
+    },
+    hideStoryMarkers() {
+      this.storyMarkers.forEach((marker) => {
+        marker.element.classList.add("hide");
+      });
+    },
+    getStoryMarker(storyIndex) {
+      return this.storyMarkers.find(
+        (marker) => marker.storyIndex === storyIndex
+      );
+    },
+    // ------------------------------------------------------------
+    // Media markers management
+    // ------------------------------------------------------------
+    createMediaMarkers(storyIndex) {
+      const story = this.storiesData[storyIndex];
+      if (this.mediaMarkers[storyIndex]) return;
 
-      story.medias.forEach((media) => {
+      this.mediaMarkers[storyIndex] = [];
+
+      story.medias.forEach((media, index) => {
+        if (!media.exif.GPS) return;
         const markerElement = document.createElement("div");
-        markerElement.className = "map__story-marker";
+        markerElement.className = "map__story-marker hide";
         markerElement.innerHTML = `
         <div class="map__story-marker-circle"></div>`;
 
@@ -164,88 +207,145 @@ export default {
         marker.setLngLat(coord);
         marker.addTo(this.map);
 
-        this.mediaMarkers[index].push({
+        this.mediaMarkers[storyIndex].push({
           marker: marker,
           element: markerElement,
+          index: index,
         });
       });
-
-      // Add path to map
-      // story.stats.forEach((stat, statIndex) => {
-      //   const segments = stat.path.tracks[0].segments[0];
-      //   const coordinates = segments.map((segment) => [
-      //     segment.lon,
-      //     segment.lat,
-      //   ]);
-
-      //   // Add the line source
-      //   this.map.addSource(`path-${index}-${statIndex}`, {
-      //     type: "geojson",
-      //     data: {
-      //       type: "Feature",
-      //       properties: {},
-      //       geometry: {
-      //         type: "LineString",
-      //         coordinates: coordinates,
-      //       },
-      //     },
-      //   });
-
-      //   // Add the line layer
-      //   this.map.addLayer({
-      //     id: `path-${index}-${statIndex}`,
-      //     type: "line",
-      //     source: `path-${index}-${statIndex}`,
-      //     layout: {
-      //       "line-join": "round",
-      //       "line-cap": "round",
-      //     },
-      //     paint: {
-      //       "line-color": "#667eea",
-      //       "line-width": 3,
-      //       "line-opacity": 1,
-      //       "line-dasharray": [2, 2],
-      //       "line-blur": 1,
-      //     },
-      //   });
-      // });
+      this.createStoryPath(storyIndex);
     },
-    getStoryMarker(storyIndex) {
-      return this.storyMarkers.find(
-        (marker) => marker.storyIndex === storyIndex
-      );
-    },
-    hideStoryMarkers() {
-      this.storyMarkers.forEach((marker) => {
-        marker.element.classList.add("hide");
-      });
-
-      this.mediaMarkers[this.currentStoryIndex]?.forEach((marker) => {
-        marker.element.classList.add("active");
-      });
-    },
-    showStoryMarkers() {
-      this.storyMarkers.forEach((marker) => {
-        marker.element.classList.remove("hide");
-      });
-
-      this.mediaMarkers.forEach((markers) => {
-        if (markers.length > 0) {
-          markers.forEach((marker) => {
-            marker.element.classList.remove("active");
+    showMediaMarkers() {
+      this.mediaMarkers.forEach((markers, index) => {
+        if (index === this.currentStoryIndex) {
+          markers?.forEach((marker) => {
+            marker.element.classList.remove("hide");
+          });
+        } else {
+          markers?.forEach((marker) => {
+            marker.element.classList.add("hide");
           });
         }
       });
-
-      this.fitBounds();
     },
-    fitBounds() {
-      if (this.storyMarkers.length === 0) return;
+    hideMediaMarkers() {
+      this.mediaMarkers.forEach((markers) => {
+        markers?.forEach((marker) => {
+          marker.element.classList.add("hide");
+        });
+      });
+    },
+    // ------------------------------------------------------------
+    // Paths management
+    // ------------------------------------------------------------
+    createStoryPath(storyIndex) {
+      const story = this.storiesData[storyIndex];
+      const stats = story.stats;
 
-      this.map.fitBounds(this.mapOptions.bounds, {
-        padding: { top: 50, bottom: 50, left: 600, right: 100 }, // hardcoded values for now
-        duration: 1000,
-        maxZoom: 15,
+      this.boundsPaths[storyIndex] = new mapboxgl.LngLatBounds();
+
+      // Add path to map
+      if (stats.length > 0) {
+        this.storyPaths[storyIndex] = new Array(stats.length).fill();
+
+        stats.forEach((stat, statIndex) => {
+          // TODO: simplify this in backend
+          const segments = stat.path.tracks[0].segments[0];
+          const coordinates = segments.map((segment) => [
+            segment.lon,
+            segment.lat,
+          ]);
+
+          // Add the line source
+          this.map.addSource(`path-${storyIndex}-${statIndex}`, {
+            type: "geojson",
+            data: {
+              type: "Feature",
+              properties: {},
+              geometry: {
+                type: "LineString",
+                coordinates: coordinates,
+              },
+            },
+          });
+
+          // Add the line layer
+          this.map.addLayer({
+            id: `path-${storyIndex}-${statIndex}`,
+            type: "line",
+            source: `path-${storyIndex}-${statIndex}`,
+            layout: {
+              "line-join": "round",
+              "line-cap": "round",
+            },
+            paint: {
+              "line-color": "#667eea",
+              "line-width": 3,
+              "line-opacity": 0,
+              // "line-opacity-transition": { duration: 300, delay: 0 },
+              "line-dasharray": [2, 2],
+            },
+          });
+
+          this.map.setLayoutProperty(
+            `path-${storyIndex}-${statIndex}`,
+            "visibility",
+            "none"
+          );
+
+          this.storyPaths[storyIndex][statIndex] = {
+            id: `path-${storyIndex}-${statIndex}`,
+            index: statIndex,
+            storyIndex: storyIndex,
+          };
+
+          // we push the first coordinates of the first path to the boundsPaths
+          if (statIndex === 0) {
+            this.boundsPaths[storyIndex].extend(coordinates[0]);
+          }
+
+          // we push the last coordinates of the last path to the boundsPaths
+          if (statIndex === stats.length - 1) {
+            this.boundsPaths[storyIndex].extend(
+              coordinates[coordinates.length - 1]
+            );
+          }
+        });
+      }
+    },
+    showStoryPath() {
+      this.storyPaths.forEach((paths, index) => {
+        if (index === this.currentStoryIndex) {
+          paths?.forEach((path) => {
+            if (this.map.getLayer(path.id)) {
+              this.map.setLayoutProperty(path.id, "visibility", "visible");
+              this.map.setPaintProperty(path.id, "line-opacity", 1);
+
+              this.map.fitBounds(this.boundsPaths[index], {
+                padding: { top: 50, bottom: 50, left: 600, right: 100 }, // hardcoded values for now
+                duration: 1000,
+                maxZoom: 15,
+              });
+            }
+          });
+        } else {
+          paths?.forEach((path) => {
+            if (this.map.getLayer(path.id)) {
+              // this.map.setLayoutProperty(path.id, "visibility", "none");
+              this.map.setPaintProperty(path.id, "line-opacity", 0);
+            }
+          });
+        }
+      });
+    },
+    hideStoryPath() {
+      this.storyPaths.forEach((paths) => {
+        paths?.forEach((path) => {
+          if (this.map.getLayer(path.id)) {
+            // this.map.setLayoutProperty(path.id, "visibility", "none");
+            this.map.setPaintProperty(path.id, "line-opacity", 0);
+          }
+        });
       });
     },
   },
@@ -353,10 +453,18 @@ export default {
   &__story-marker {
     pointer-events: none;
 
+    &.hide {
+      .map__story-marker-circle {
+        opacity: 0;
+        transform: scale(0);
+      }
+    }
+
     &.active {
       .map__story-marker-circle {
-        opacity: 1;
-        transform: scale(1);
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        transform: scale(1.2);
+        box-shadow: 0 4px 16px rgba(255, 107, 107, 0.4);
       }
     }
 
@@ -371,18 +479,11 @@ export default {
       align-items: center;
       justify-content: center;
       transition: all 600ms $easing;
-      opacity: 0;
-      transform: scale(0);
-
+      opacity: 1;
+      transform: scale(1);
       // &:hover {
       //   transform: scale(1.1);
       //   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-      // }
-
-      // &--active {
-      //   background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-      //   transform: scale(1.2);
-      //   box-shadow: 0 4px 16px rgba(255, 107, 107, 0.4);
       // }
     }
   }
