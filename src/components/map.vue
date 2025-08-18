@@ -65,7 +65,9 @@ export default {
     },
     "storyStore.currentStoryIndex": {
       handler(currentStoryIndex) {
-        const stats = this.storiesData[currentStoryIndex].stats;
+        const storyData = this.storiesData[currentStoryIndex];
+        const stats = storyData?.stats;
+
         if (stats && stats.length > 0) {
           // if we have stats, show the media markers and hide the story markers
           this.showMediaMarkers();
@@ -80,12 +82,9 @@ export default {
     },
     "storyStore.mediaIndex": {
       handler(mediaIndex) {
-        const stats = this.storiesData[this.currentStoryIndex]?.stats;
-
-        const media =
-          this.storiesData[this.currentStoryIndex]?.medias[
-            mediaIndex[this.currentStoryIndex]
-          ];
+        const storyData = this.storiesData[this.currentStoryIndex];
+        const stats = storyData?.stats;
+        const media = storyData?.medias[mediaIndex[this.currentStoryIndex]];
 
         if (stats && stats.length > 0) {
           if (mediaIndex[this.currentStoryIndex] === 0) {
@@ -97,11 +96,14 @@ export default {
                 zoom: 12,
                 duration: 2000,
               });
+
+              // marker.element.classList.add("active");
             }
           }
         } else {
           this.hideStoryPath();
         }
+        this.setMediaMarkerActive(mediaIndex[this.currentStoryIndex]);
       },
       deep: true,
     },
@@ -142,7 +144,7 @@ export default {
       `;
 
       markerElement.addEventListener("click", () => {
-        // this.storyStore.setCurrentStoryIndex(index);
+        this.storyStore.setCurrentStoryIndex(index);
       });
 
       const marker = new mapboxgl.Marker(markerElement);
@@ -199,6 +201,10 @@ export default {
         markerElement.innerHTML = `
         <div class="map__story-marker-circle"></div>`;
 
+        markerElement.addEventListener("click", () => {
+          this.storyStore.setMediaIndex(index);
+        });
+
         const marker = new mapboxgl.Marker(markerElement);
         const coord = new mapboxgl.LngLat(
           media.exif.GPS.longitude,
@@ -235,6 +241,15 @@ export default {
         });
       });
     },
+    setMediaMarkerActive(mediaIndex) {
+      this.mediaMarkers[this.currentStoryIndex]?.forEach((marker) => {
+        if (marker.index !== mediaIndex) {
+          marker.element.classList.remove("active");
+        } else {
+          marker.element.classList.add("active");
+        }
+      });
+    },
     // ------------------------------------------------------------
     // Paths management
     // ------------------------------------------------------------
@@ -249,7 +264,6 @@ export default {
         this.storyPaths[storyIndex] = new Array(stats.length).fill();
 
         stats.forEach((stat, statIndex) => {
-          // TODO: simplify this in backend
           const segments = stat.path.tracks[0].segments[0];
           const coordinates = segments.map((segment) => [
             segment.lon,
@@ -282,7 +296,6 @@ export default {
               "line-color": "#667eea",
               "line-width": 3,
               "line-opacity": 0,
-              // "line-opacity-transition": { duration: 300, delay: 0 },
               "line-dasharray": [2, 2],
             },
           });
@@ -299,16 +312,9 @@ export default {
             storyIndex: storyIndex,
           };
 
-          // we push the first coordinates of the first path to the boundsPaths
-          if (statIndex === 0) {
-            this.boundsPaths[storyIndex].extend(coordinates[0]);
-          }
-
-          // we push the last coordinates of the last path to the boundsPaths
-          if (statIndex === stats.length - 1) {
-            this.boundsPaths[storyIndex].extend(
-              coordinates[coordinates.length - 1]
-            );
+          const step = Math.max(Math.floor(coordinates.length / 2), 1);
+          for (let i = 0; i < coordinates.length; i += step) {
+            this.boundsPaths[storyIndex].extend(coordinates[i]);
           }
         });
       }
@@ -386,8 +392,15 @@ export default {
   &__marker {
     pointer-events: none;
 
+    &:hover {
+      .map__marker-circle {
+        transform: scale(1.1);
+      }
+    }
+
     &.loaded {
-      // cursor: pointer;
+      pointer-events: auto;
+      cursor: pointer;
 
       .map__marker-circle {
         transform: scale(1);
@@ -451,9 +464,18 @@ export default {
   }
 
   &__story-marker {
-    pointer-events: none;
+    pointer-events: auto;
+    cursor: pointer;
+
+    &:hover {
+      .map__story-marker-circle {
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      }
+    }
 
     &.hide {
+      pointer-events: none;
       .map__story-marker-circle {
         opacity: 0;
         transform: scale(0);
@@ -478,13 +500,9 @@ export default {
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 600ms $easing;
+      transition: all 300ms $easing;
       opacity: 1;
       transform: scale(1);
-      // &:hover {
-      //   transform: scale(1.1);
-      //   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-      // }
     }
   }
 }

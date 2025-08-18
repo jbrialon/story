@@ -1,9 +1,12 @@
 import { defineStore } from "pinia";
+import MobileDetect from "mobile-detect";
+
 import Preloader from "../utils/Preloader.js";
 import { getMediaUrl } from "../utils/imageUtils.js";
 import { formatDate, parseExifDate } from "../utils/dateUtils.js";
 import { setStoriesListHeight } from "../utils/sizeUtils.js";
 
+const isMobile = new MobileDetect(window.navigator.userAgent).mobile();
 const apiUrl = import.meta.env.VITE_API_URL;
 
 export const useStoryStore = defineStore("story", {
@@ -196,7 +199,8 @@ export const useStoryStore = defineStore("story", {
         await Preloader.load(medias);
 
         // Load path JSON files if stats exist
-        if (storyData.stats && storyData.stats.length > 0) {
+        // we don't load the json on mobile because we don't show the map
+        if (storyData.stats && storyData.stats.length > 0 && !isMobile) {
           await Promise.all(
             storyData.stats.map(async (stat, statIndex) => {
               const pathUrl = `${apiUrl}/story/${encodeURIComponent(story.id)}${
