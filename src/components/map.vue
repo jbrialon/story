@@ -84,11 +84,16 @@ export default {
       handler(mediaIndex) {
         const storyData = this.storiesData[this.currentStoryIndex];
         const stats = storyData?.stats;
-        const media = storyData?.medias[mediaIndex[this.currentStoryIndex]];
+        const storyMediaIndex = mediaIndex[this.currentStoryIndex];
+        const media = storyData?.medias[storyMediaIndex];
 
         if (stats && stats.length > 0) {
-          if (mediaIndex[this.currentStoryIndex] === 0) {
+          if (storyMediaIndex === 0) {
             this.showStoryPath();
+          } else if (storyMediaIndex === 1 && this.currentStoryIndex === 0) {
+            this.showStoryPath();
+            this.showMediaMarkers();
+            this.hideStoryMarkers();
           } else {
             if (media?.exif.GPS) {
               this.map.flyTo({
@@ -96,14 +101,12 @@ export default {
                 zoom: 12,
                 duration: 2000,
               });
-
-              // marker.element.classList.add("active");
             }
           }
         } else {
           this.hideStoryPath();
         }
-        this.setMediaMarkerActive(mediaIndex[this.currentStoryIndex]);
+        this.setMediaMarkerActive(storyMediaIndex);
       },
       deep: true,
     },

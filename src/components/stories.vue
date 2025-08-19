@@ -10,12 +10,6 @@ export default {
     const storyStore = useStoryStore();
     return { storyStore };
   },
-  data() {
-    return {
-      // TODO: make this work
-      storyViewed: [],
-    };
-  },
   components: {
     Story,
   },
@@ -32,6 +26,9 @@ export default {
     transitionDirection() {
       return this.storyStore.transitionDirection;
     },
+    storyViewed() {
+      return this.storyStore.storyViewed;
+    },
   },
   methods: {
     selectStory(index) {
@@ -39,6 +36,11 @@ export default {
     },
     getMediaUrl(story) {
       return getMediaUrl(story.id, story.cover);
+    },
+    onBeforeLeave() {
+      if (this.transitionDirection === 1) {
+        this.storyStore.setStoryViewed(this.currentIndex - 1, true);
+      }
     },
     onAfterLeave() {
       // after we leave the story, reset the media index to 0 so when we go back we start at the first media
@@ -64,7 +66,7 @@ export default {
           <span
             class="stories__image"
             :class="{
-              viewed: storyViewed.includes(story.id),
+              viewed: storyViewed[index],
             }"
           >
             <img
@@ -88,6 +90,7 @@ export default {
                 ? 'cube-effect-next'
                 : 'cube-effect-prev'
             "
+            @before-leave="onBeforeLeave"
             @after-leave="onAfterLeave"
           >
             <Story
@@ -116,7 +119,7 @@ export default {
   transform: translateY(-50%);
   background: white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  border-radius: 15px;
+  border-radius: 35px;
   overflow: hidden;
 
   @include small-only {

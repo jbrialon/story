@@ -1,6 +1,7 @@
 <script>
 import { getMediaUrl } from "../utils/imageUtils.js";
 import { useStoryStore } from "../stores/storyStore.js";
+import { formatDate } from "../utils/dateUtils.js";
 
 import Loader from "./loader.vue";
 
@@ -43,6 +44,24 @@ export default {
     },
   },
   methods: {
+    getDateRange(stats) {
+      if (!stats || stats.length === 0) return "";
+
+      const startDate = formatDate(stats[0].timestamp);
+      const endDate = formatDate(stats[stats.length - 1].timestamp);
+
+      return `${startDate} -> ${endDate}`;
+    },
+    getDistance(stats) {
+      return `${stats
+        .reduce((acc, curr) => acc + curr.totalDistanceKm, 0)
+        .toFixed(0)}km`;
+    },
+    getElevation(stats) {
+      return `${stats
+        .reduce((acc, curr) => acc + curr.totalElevationGainM, 0)
+        .toFixed(0)}m d+`;
+    },
     getMediaUrl(src) {
       return getMediaUrl(this.storyId, src);
     },
@@ -100,7 +119,7 @@ export default {
             </span>
           </span>
         </div>
-        <div class="story__header">
+        <div class="story__header" v-if="currentMediaIndex !== 0">
           <div class="story__header-title">
             {{ storyData.story.name }}
           </div>
@@ -128,6 +147,18 @@ export default {
             }"
           >
             <template v-if="media.type === 'photo'">
+              <div class="story__media-overlay" v-if="index === 0">
+                <h2>
+                  {{ storyData.story.name }}
+                </h2>
+                <p>
+                  {{ getDistance(storyData.stats) }} //
+                  {{ getElevation(storyData.stats) }}
+                </p>
+                <p>
+                  {{ getDateRange(storyData.stats) }}
+                </p>
+              </div>
               <img
                 :key="`photo-${index}`"
                 :src="getMediaUrl(media.src)"
@@ -250,6 +281,41 @@ $z-navigation: 30;
       object-fit: cover;
     }
 
+    &-overlay {
+      background: rgba(0, 0, 0, 0.5);
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: $z-content;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 95px 15px 15px 15px;
+      color: #fff;
+
+      p,
+      h2 {
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 1.2;
+        padding: 10px 12px;
+        margin: 0 0 15px 0;
+        background: rgba($c-grey-light, 0.2);
+        text-shadow: 0px 0px 4px rgba(0, 0, 0, 0.35);
+        letter-spacing: 0.06em;
+        backdrop-filter: blur(3px);
+        border-radius: 10px;
+        text-transform: uppercase;
+      }
+
+      h2 {
+        font-size: 24px;
+        margin: 0 0 15px 0;
+      }
+    }
     &-description {
       position: absolute;
       bottom: 15px;

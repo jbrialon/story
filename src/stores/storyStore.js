@@ -17,6 +17,7 @@ export const useStoryStore = defineStore("story", {
     transitionDirection: 1,
     stories: [],
     storiesLoading: [], // Array to track loading state for individual stories
+    storyViewed: [], // Array to track stories that have been viewed
     storyData: [], // Array to store individual story data by story index
     mediaIndex: [],
   }),
@@ -92,6 +93,7 @@ export const useStoryStore = defineStore("story", {
     setStories(stories) {
       this.stories = stories;
       this.storiesLoading = new Array(stories.length).fill(true);
+      this.storyViewed = new Array(stories.length).fill(false);
       this.storyData = new Array(stories.length).fill(null);
       this.mediaIndex = new Array(stories.length).fill(0);
     },
@@ -107,7 +109,11 @@ export const useStoryStore = defineStore("story", {
         this.storyData[storyIndex] = data;
       }
     },
-
+    setStoryViewed(storyIndex, viewed) {
+      if (this.storyViewed[storyIndex] !== undefined) {
+        this.storyViewed[storyIndex] = viewed;
+      }
+    },
     async loadStories() {
       try {
         const response = await fetch(`${apiUrl}/story`);
