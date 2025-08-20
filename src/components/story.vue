@@ -63,7 +63,7 @@ export default {
         .toFixed(0)}m d+`;
     },
     getMediaUrl(src) {
-      return getMediaUrl(this.storyId, src);
+      return getMediaUrl(this.storyData, src, this.storyData.lastUpdate);
     },
     next() {
       this.storyStore.nextMedia();
@@ -208,6 +208,7 @@ $z-navigation: 30;
   top: 0;
   left: 0;
   transform-origin: center center calc($stories-width / 2 * -1);
+  transform: translateZ(1px);
 
   @include small-only {
     transform-origin: center center calc(var(--vw) / 2 * -1);

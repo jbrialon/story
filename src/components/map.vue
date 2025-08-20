@@ -122,7 +122,7 @@ export default {
   },
   methods: {
     getMediaUrl(story) {
-      return getMediaUrl(story.id, story.cover);
+      return getMediaUrl(story, story.cover, story.lastUpdate);
     },
     fitBounds() {
       if (this.storyMarkers.length === 0) return;

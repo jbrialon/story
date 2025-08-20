@@ -35,7 +35,7 @@ export default {
       this.storyStore.setCurrentStoryIndex(index);
     },
     getMediaUrl(story) {
-      return getMediaUrl(story.id, story.cover);
+      return getMediaUrl(story, story.cover, story.lastUpdate);
     },
     onBeforeLeave() {
       if (this.transitionDirection === 1) {

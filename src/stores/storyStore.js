@@ -149,7 +149,7 @@ export const useStoryStore = defineStore("story", {
         // Preload cover images
         const coverImages = this.stories
           .filter((story) => story.cover)
-          .map((story) => getMediaUrl(story.id, story.cover));
+          .map((story) => getMediaUrl(story, story.cover, story.lastUpdate));
 
         await Preloader.load(coverImages);
         setStoriesListHeight();
@@ -200,7 +200,7 @@ export const useStoryStore = defineStore("story", {
 
         // Preload photos
         const medias = storyData.medias.map((media) =>
-          getMediaUrl(story.id, media.src)
+          getMediaUrl(story, media.src, story.lastUpdate)
         );
         await Preloader.load(medias);
 
@@ -211,7 +211,7 @@ export const useStoryStore = defineStore("story", {
             storyData.stats.map(async (stat, statIndex) => {
               const pathUrl = `${apiUrl}/story/${encodeURIComponent(story.id)}${
                 stat.pathJson
-              }`;
+              }?v=${story.lastUpdate}`;
               const pathResponse = await fetch(pathUrl);
               if (pathResponse.ok) {
                 const pathData = await pathResponse.json();

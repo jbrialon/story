@@ -6,6 +6,9 @@
  */
 const apiUrl = import.meta.env.VITE_API_URL;
 
-export function getMediaUrl(storyId, mediaPath) {
-  return `${apiUrl}/story/${encodeURIComponent(storyId)}${mediaPath}`;
+export function getMediaUrl(story, mediaPath) {
+  console.log(`getMediaUrl for ${story.id}: `, story.lastUpdate);
+  return `${apiUrl}/story/${encodeURIComponent(story.id)}${mediaPath}?v=${
+    story.lastUpdate
+  }`;
 }
