@@ -223,6 +223,7 @@ $z-navigation: 30;
 
   &__content {
     position: relative;
+    pointer-events: none;
     width: 100%;
     height: 100%;
 
@@ -424,6 +425,7 @@ $z-navigation: 30;
 
   &__navigation {
     position: absolute;
+    pointer-events: auto;
     top: 0;
     left: 0;
     right: 0;
