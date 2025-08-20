@@ -173,6 +173,7 @@ export default {
                 :src="getMediaUrl(media.src)"
                 :alt="storyData.story.name"
                 loop
+                volume="0.35"
                 playsinline
                 preload="metadata"
               />
