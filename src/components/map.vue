@@ -133,6 +133,16 @@ export default {
         maxZoom: 15,
       });
     },
+    handleResize() {
+      if (this.map) {
+        this.map.resize();
+        this.$nextTick(() => {
+          if (this.storyMarkers.length > 0) {
+            this.fitBounds();
+          }
+        });
+      }
+    },
     // ------------------------------------------------------------
     // Story markers management (Main Markers for the stories)
     // ------------------------------------------------------------
@@ -366,6 +376,12 @@ export default {
       center: this.mapOptions.center, // starting position [lng, lat]
       zoom: this.mapOptions.zoom, // starting zoom
     });
+
+    this.handleResize = this.handleResize.bind(this);
+    window.addEventListener("resize", this.handleResize);
+  },
+  beforeUnmount() {
+    window.removeEventListener("resize", this.handleResize);
   },
 };
 </script>

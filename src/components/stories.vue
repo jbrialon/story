@@ -37,11 +37,6 @@ export default {
     getMediaUrl(story) {
       return getMediaUrl(story, story.cover, story.lastUpdate);
     },
-    onBeforeLeave() {
-      if (this.transitionDirection === 1) {
-        this.storyStore.setStoryViewed(this.currentIndex - 1, true);
-      }
-    },
     onAfterLeave() {
       // after we leave the story, reset the media index to 0 so when we go back we start at the first media
       this.storyStore.resetMediaIndex();
@@ -90,7 +85,6 @@ export default {
                 ? 'cube-effect-next'
                 : 'cube-effect-prev'
             "
-            @before-leave="onBeforeLeave"
             @after-leave="onAfterLeave"
           >
             <Story

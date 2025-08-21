@@ -45,6 +45,10 @@ export default {
       if (!this.storyData) return;
 
       this.controlVideoPlayback();
+
+      if (this.currentMediaIndex === this.storyData.medias.length - 1) {
+        this.storyStore.setStoryViewed(this.index, true);
+      }
     },
   },
   methods: {
