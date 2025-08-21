@@ -23,6 +23,10 @@ import { useStoryStore } from "./stores/storyStore.js";
 const md = new MobileDetect(window.navigator.userAgent);
 
 export default {
+  setup() {
+    const storyStore = useStoryStore();
+    return { storyStore };
+  },
   data() {
     return {
       isMobile: md.mobile(),
@@ -30,9 +34,6 @@ export default {
   },
   components: { Map, Stories, Goo, Loader },
   computed: {
-    storyStore() {
-      return useStoryStore();
-    },
     loading() {
       return this.storyStore.isLoading;
     },

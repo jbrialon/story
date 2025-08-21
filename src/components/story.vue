@@ -93,7 +93,9 @@ export default {
         this.currentVideoPlaying = null;
       }
     },
-    onMouseDown(e) {
+    handleEventDown(event) {
+      event.preventDefault();
+
       this.mouseDown = true;
       this.mouseDownTime = Date.now();
 
@@ -101,8 +103,10 @@ export default {
         this.currentVideoPlaying.pause();
       }
     },
-    onMouseUp(e) {
-      const action = e.target.dataset.action;
+    handleEventUp(event) {
+      event.preventDefault();
+
+      const action = event.target.dataset.action;
 
       this.mouseDown = false;
       if (this.mouseDownTime) {
@@ -160,8 +164,10 @@ export default {
         </div>
         <div
           class="story__navigation"
-          @mousedown="onMouseDown"
-          @mouseup="onMouseUp"
+          @mousedown="handleEventDown"
+          @mouseup="handleEventUp"
+          @touchstart="handleEventDown"
+          @touchend="handleEventUp"
         >
           <div
             data-action="prev"
