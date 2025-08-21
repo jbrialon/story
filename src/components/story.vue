@@ -18,7 +18,11 @@ export default {
     },
   },
   data() {
-    return {};
+    return {
+      mouseDownTime: null,
+      maxHoldDuration: 300,
+      currentVideoPlaying: null,
+    };
   },
   setup() {
     const storyStore = useStoryStore();
@@ -50,7 +54,7 @@ export default {
       const startDate = formatDate(stats[0].timestamp);
       const endDate = formatDate(stats[stats.length - 1].timestamp);
 
-      return `${startDate} -> ${endDate}`;
+      return `${startDate} → ${endDate}`;
     },
     getDistance(stats) {
       return `${stats
@@ -76,24 +80,51 @@ export default {
       return landscape ? "landscape" : "portrait";
     },
     controlVideoPlayback() {
-      if (!this.storyData || !this.storyData.medias) return;
-
-      this.storyData.medias.forEach((media, index) => {
-        if (media.type === "video") {
-          const videoElement = this.$refs[`video-${index}`];
-          if (videoElement && videoElement.length > 0) {
-            const video = videoElement[0];
-            if (index === this.currentMediaIndex) {
-              // Play video if it's the current index
-              video.currentTime = 0; // Reset to start
-              video.play();
-            } else {
-              // Pause video if it's not the current index
-              video.pause();
-            }
-          }
+      const currentMedia = this.storyData.medias[this.currentMediaIndex];
+      if (currentMedia.type === "video") {
+        const videoElement = this.$refs[`video-${this.currentMediaIndex}`];
+        if (videoElement && videoElement.length > 0) {
+          this.currentVideoPlaying = videoElement[0];
+          this.currentVideoPlaying.currentTime = 0;
+          this.currentVideoPlaying.play();
         }
-      });
+      } else if (this.currentVideoPlaying) {
+        this.currentVideoPlaying.pause();
+        this.currentVideoPlaying = null;
+      }
+    },
+    onMouseDown(e) {
+      this.mouseDown = true;
+      this.mouseDownTime = Date.now();
+
+      if (this.currentVideoPlaying) {
+        this.currentVideoPlaying.pause();
+      }
+    },
+    onMouseUp(e) {
+      const action = e.target.dataset.action;
+
+      this.mouseDown = false;
+      if (this.mouseDownTime) {
+        const holdDuration = Date.now() - this.mouseDownTime;
+
+        if (holdDuration > this.maxHoldDuration) {
+          this.mouseDownTime = null;
+          // if we release after holding too long, play the video
+          if (this.currentVideoPlaying) {
+            this.currentVideoPlaying.play();
+          }
+          return;
+        }
+      }
+
+      if (action === "prev") {
+        this.prev();
+      } else if (action === "next") {
+        this.next();
+      }
+
+      this.mouseDownTime = null;
     },
   },
 };
@@ -127,15 +158,19 @@ export default {
             {{ storyData.medias[currentMediaIndex].exif.formattedDate }}
           </div>
         </div>
-        <div class="story__navigation">
-          <button
+        <div
+          class="story__navigation"
+          @mousedown="onMouseDown"
+          @mouseup="onMouseUp"
+        >
+          <div
+            data-action="prev"
             class="story__navigation-button story__navigation-button--prev"
-            @click="prev"
-          ></button>
-          <button
+          ></div>
+          <div
+            data-action="next"
             class="story__navigation-button story__navigation-button--next"
-            @click="next"
-          ></button>
+          ></div>
         </div>
         <div class="story__media-container">
           <div
@@ -152,12 +187,12 @@ export default {
                   {{ storyData.story.name }}
                 </h2>
                 <p>
-                  <i class="bxr bxs-mountain-peak"></i> 
+                  <i class="bxr bxs-mountain-peak"></i>
                   {{ getDistance(storyData.stats) }} //
                   {{ getElevation(storyData.stats) }}
                 </p>
                 <p>
-                  <i class="bxr bxs-calendar-alt"></i> 
+                  <i class="bxr bxs-calendar-alt"></i>
                   {{ getDateRange(storyData.stats) }}
                 </p>
               </div>
