@@ -152,10 +152,12 @@ export default {
                   {{ storyData.story.name }}
                 </h2>
                 <p>
+                  <i class="bxr bxs-mountain-peak"></i> 
                   {{ getDistance(storyData.stats) }} //
                   {{ getElevation(storyData.stats) }}
                 </p>
                 <p>
+                  <i class="bxr bxs-calendar-alt"></i> 
                   {{ getDateRange(storyData.stats) }}
                 </p>
               </div>
@@ -224,7 +226,7 @@ $z-navigation: 30;
 
   &__content {
     position: relative;
-    pointer-events: none;
+    z-index: 1;
     width: 100%;
     height: 100%;
 
@@ -301,6 +303,9 @@ $z-navigation: 30;
 
       p,
       h2 {
+        display: flex;
+        align-items: center;
+        gap: 10px;
         font-size: 14px;
         font-weight: 700;
         line-height: 1.2;
@@ -312,6 +317,10 @@ $z-navigation: 30;
         backdrop-filter: blur(3px);
         border-radius: 10px;
         text-transform: uppercase;
+
+        i {
+          font-size: 18px;
+        }
       }
 
       h2 {
@@ -319,6 +328,7 @@ $z-navigation: 30;
         margin: 0 0 15px 0;
       }
     }
+
     &-description {
       position: absolute;
       bottom: 15px;
@@ -426,7 +436,6 @@ $z-navigation: 30;
 
   &__navigation {
     position: absolute;
-    pointer-events: auto;
     top: 0;
     left: 0;
     right: 0;
