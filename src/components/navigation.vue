@@ -29,7 +29,8 @@ export default {
   props: {
     currentVideoPlaying: {
       type: Object,
-      required: true,
+      required: false,
+      default: null,
     },
   },
   data() {
