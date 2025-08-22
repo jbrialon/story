@@ -5,6 +5,10 @@ import { formatDate } from "../utils/dateUtils.js";
 
 import Loader from "./loader.vue";
 import Navigation from "./navigation.vue";
+import Pagination from "./pagination.vue";
+
+import BulletTimeline from "../classes/bulletTimeline.js";
+const tl = new BulletTimeline();
 
 export default {
   name: "Story",
@@ -27,7 +31,7 @@ export default {
     const storyStore = useStoryStore();
     return { storyStore };
   },
-  components: { Loader, Navigation },
+  components: { Loader, Navigation, Pagination },
   computed: {
     storyData() {
       return this.storyStore.getStoryData(this.index);
@@ -45,6 +49,11 @@ export default {
 
       this.controlVideoPlayback();
 
+      // TODO: improve this
+      if (this.currentMediaIndex === 1) {
+        console.log("we are on the second media, playing");
+        tl.play();
+      }
       if (this.currentMediaIndex === this.storyData.medias.length - 1) {
         this.storyStore.setStoryViewed(this.index, true);
       }
@@ -101,19 +110,10 @@ export default {
     </Transition>
     <Transition name="fade">
       <div class="story__content" v-if="!loading && storyData">
-        <div class="story__pagination">
-          <span
-            class="story__pagination-bullet"
-            v-for="index in storyData.medias.length"
-            :key="index"
-          >
-            <span
-              class="story__pagination-bullet-progress"
-              :style="{ width: index - 1 <= currentMediaIndex ? '100%' : '0%' }"
-            >
-            </span>
-          </span>
-        </div>
+        <Pagination
+          :medias="storyData.medias"
+          :currentMediaIndex="currentMediaIndex"
+        />
         <div class="story__header" v-if="currentMediaIndex !== 0">
           <div class="story__header-title">
             {{ storyData.story.name }}
@@ -138,12 +138,12 @@ export default {
                   {{ storyData.story.name }}
                 </h2>
                 <p>
-                  <i class="bxr bxs-mountain-peak"></i>
+                  <i class="bx bx-mountain-peak"></i>
                   {{ getDistance(storyData.stats) }} //
                   {{ getElevation(storyData.stats) }}
                 </p>
                 <p>
-                  <i class="bxr bxs-calendar-alt"></i>
+                  <i class="bx bx-calendar-alt"></i>
                   {{ getDateRange(storyData.stats) }}
                 </p>
               </div>
@@ -160,7 +160,6 @@ export default {
                 :key="`video-${index}`"
                 :src="getMediaUrl(media.src)"
                 :alt="storyData.story.name"
-                loop
                 volume="0.35"
                 playsinline
                 preload="metadata"
@@ -344,46 +343,6 @@ export default {
         &:only-child {
           margin-bottom: 0;
         }
-      }
-    }
-  }
-
-  &__pagination {
-    position: absolute;
-    left: 0px;
-    right: 0px;
-    top: 10px;
-    bottom: unset;
-    max-width: calc(100% - 10px);
-    margin: 0 auto;
-    display: flex;
-    justify-content: space-between;
-    z-index: $z-pagination;
-
-    &-bullet {
-      width: 100%;
-      flex-shrink: 10;
-      border-radius: 999px;
-      height: 3px;
-      background: rgba(255, 255, 255, 0.35);
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 0 1px #00000059;
-      opacity: 1;
-      margin: 0 4px;
-    }
-
-    &-bullet-progress {
-      position: absolute;
-      background: #fff;
-      left: 0;
-      top: 0;
-      height: 100%;
-      width: 0;
-      transition: width 0.5s $easing;
-
-      &.viewed {
-        background: #000;
       }
     }
   }

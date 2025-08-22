@@ -184,7 +184,6 @@ export default {
       .stories__name {
         opacity: 1;
       }
-
       .stories__button {
         cursor: pointer;
       }
@@ -241,12 +240,6 @@ export default {
     &.viewed {
       &:before {
         opacity: 0.4;
-      }
-    }
-
-    &.loading {
-      &:before {
-        // TODO: add loading animation
       }
     }
 

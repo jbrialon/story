@@ -20,6 +20,9 @@
 <script>
 import { useStoryStore } from "../stores/storyStore";
 
+import BulletTimeline from "../classes/bulletTimeline.js";
+const tl = new BulletTimeline();
+
 export default {
   name: "Navigation",
   setup() {
@@ -39,12 +42,26 @@ export default {
       maxHoldDuration: 300,
     };
   },
+  computed: {
+    currentMediaIndex() {
+      return this.storyStore.mediaIndex[this.storyStore.currentStoryIndex];
+    },
+  },
   methods: {
     next() {
+      // improve this
+      const page = `bullet-${this.currentMediaIndex}`;
+      tl.seek(page).play();
       this.storyStore.nextMedia();
     },
     prev() {
       this.storyStore.prevMedia();
+
+      // improve this
+      if (this.currentMediaIndex > 0) {
+        const page = `bullet-${this.currentMediaIndex - 1}`;
+        tl.seek(page).play();
+      }
     },
     handleEventDown(event) {
       event.preventDefault();
@@ -52,6 +69,7 @@ export default {
       this.mouseDown = true;
       this.mouseDownTime = Date.now();
 
+      tl.pause();
       if (this.currentVideoPlaying) {
         this.currentVideoPlaying.pause();
       }
@@ -68,6 +86,8 @@ export default {
         if (holdDuration > this.maxHoldDuration) {
           this.mouseDownTime = null;
           // if we release after holding too long, play the video
+          tl.play();
+
           if (this.currentVideoPlaying) {
             this.currentVideoPlaying.play();
           }
