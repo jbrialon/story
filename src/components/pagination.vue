@@ -8,9 +8,6 @@
 
 <script>
 import { useStoryStore } from "../stores/storyStore.js";
-import BulletTimeline from "../classes/bulletTimeline.js";
-
-const tl = new BulletTimeline();
 
 export default {
   name: "Pagination",
@@ -27,23 +24,29 @@ export default {
       type: Number,
       required: true,
     },
+    tl: {
+      type: Object,
+      required: true,
+    },
   },
   mounted() {
-    tl.clear();
+    // this.tl.clear();
     this.medias.forEach((media, index) => {
       const duration = media.type === "video" ? media.duration : 5;
-      tl.to(this.$refs.progress[index], {
-        width: "100%",
-        duration,
-        ease: "linear",
-        onComplete: () => {
-          this.storyStore.nextMedia();
-          if (index === this.medias.length - 1) {
-            console.log("we are on the last media, pausing");
-            tl.pause();
-          }
-        },
-      }).addLabel(`bullet-${index}`);
+      this.tl
+        .to(this.$refs.progress[index], {
+          width: "100%",
+          duration,
+          ease: "linear",
+          onComplete: () => {
+            this.storyStore.nextMedia();
+            if (index === this.medias.length - 1) {
+              console.log("we are on the last media, pausing");
+              this.tl.pause();
+            }
+          },
+        })
+        .addLabel(`bullet-${index}`);
     });
   },
 };

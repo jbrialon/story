@@ -1,4 +1,5 @@
 <script>
+import gsap from "gsap";
 import { getMediaUrl } from "../utils/imageUtils.js";
 import { useStoryStore } from "../stores/storyStore.js";
 import { formatDate } from "../utils/dateUtils.js";
@@ -6,9 +7,6 @@ import { formatDate } from "../utils/dateUtils.js";
 import Loader from "./loader.vue";
 import Navigation from "./navigation.vue";
 import Pagination from "./pagination.vue";
-
-import BulletTimeline from "../classes/bulletTimeline.js";
-const tl = new BulletTimeline();
 
 export default {
   name: "Story",
@@ -29,7 +27,9 @@ export default {
   },
   setup() {
     const storyStore = useStoryStore();
-    return { storyStore };
+    const tl = gsap.timeline({ paused: true });
+
+    return { storyStore, tl };
   },
   components: { Loader, Navigation, Pagination },
   computed: {
@@ -52,7 +52,7 @@ export default {
       // TODO: improve this
       if (this.currentMediaIndex === 1) {
         console.log("we are on the second media, playing");
-        tl.play();
+        this.tl.play();
       }
       if (this.currentMediaIndex === this.storyData.medias.length - 1) {
         this.storyStore.setStoryViewed(this.index, true);
@@ -113,6 +113,7 @@ export default {
         <Pagination
           :medias="storyData.medias"
           :currentMediaIndex="currentMediaIndex"
+          :tl="tl"
         />
         <div class="story__header" v-if="currentMediaIndex !== 0">
           <div class="story__header-title">
@@ -122,7 +123,7 @@ export default {
             {{ storyData.medias[currentMediaIndex].exif.formattedDate }}
           </div>
         </div>
-        <Navigation :currentVideoPlaying="currentVideoPlaying" />
+        <Navigation :currentVideoPlaying="currentVideoPlaying" :tl="tl" />
         <div class="story__media-container">
           <div
             class="story__media"
