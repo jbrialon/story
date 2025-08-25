@@ -20,6 +20,7 @@ export const useStoryStore = defineStore("story", {
     storyViewed: [], // Array to track stories that have been viewed
     storyData: [], // Array to store individual story data by story index
     mediaIndex: [],
+    mapInteracted: false,
   }),
 
   actions: {
@@ -39,6 +40,7 @@ export const useStoryStore = defineStore("story", {
         return;
 
       this.transitionDirection = index > this.currentStoryIndex ? 1 : -1;
+      this.mediaIndex[index] = 0;
       this.currentStoryIndex = index;
     },
 
@@ -54,6 +56,10 @@ export const useStoryStore = defineStore("story", {
 
       this.transitionDirection = -1;
       this.currentStoryIndex--;
+    },
+
+    setMapInteracted(interacted) {
+      this.mapInteracted = interacted;
     },
 
     // ------------------------------
@@ -200,7 +206,7 @@ export const useStoryStore = defineStore("story", {
 
         // Preload photos
         const medias = storyData.medias.map((media) =>
-          getMediaUrl(story, media.src, story.lastUpdate)
+          getMediaUrl(story, media.src)
         );
         await Preloader.load(medias);
 

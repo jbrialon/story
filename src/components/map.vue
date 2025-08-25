@@ -34,6 +34,9 @@ export default {
     currentStoryIndex() {
       return this.storyStore.currentStoryIndex;
     },
+    storyMediaIndex() {
+      return this.storyStore.mediaIndex[this.currentStoryIndex];
+    },
   },
   watch: {
     "storyStore.stories": {
@@ -114,7 +117,7 @@ export default {
       handler(complete) {
         // when loading transition is complete we trigger the reveal animation
         if (complete) {
-          this.fitBounds();
+          this.fitBounds(this.mapOptions.bounds);
         }
       },
       immediate: true,
@@ -122,12 +125,12 @@ export default {
   },
   methods: {
     getMediaUrl(story) {
-      return getMediaUrl(story, story.cover, story.lastUpdate);
+      return getMediaUrl(story, story.cover);
     },
-    fitBounds() {
-      if (this.storyMarkers.length === 0) return;
+    fitBounds(bounds) {
+      if (!bounds) return;
 
-      this.map.fitBounds(this.mapOptions.bounds, {
+      this.map.fitBounds(bounds, {
         padding: { top: 50, bottom: 50, left: 600, right: 100 }, // hardcoded values for now
         duration: 1000,
         maxZoom: 15,
@@ -136,12 +139,20 @@ export default {
     handleResize() {
       if (this.map) {
         this.map.resize();
-        this.$nextTick(() => {
-          if (this.storyMarkers.length > 0) {
-            this.fitBounds();
-          }
-        });
+        if (this.storyMediaIndex === 0 && this.currentStoryIndex === 0) {
+          this.fitBounds(this.mapOptions.bounds);
+        } else {
+          this.fitBounds(this.boundsPaths[this.currentStoryIndex]);
+        }
       }
+    },
+    handleDragStart() {
+      this.storyStore.setMapInteracted(true);
+    },
+    handleDragEnd() {
+      setTimeout(() => {
+        this.storyStore.setMapInteracted(false);
+      }, 15000);
     },
     // ------------------------------------------------------------
     // Story markers management (Main Markers for the stories)
@@ -186,7 +197,7 @@ export default {
         marker.element.classList.remove("hide");
       });
 
-      this.fitBounds();
+      this.fitBounds(this.mapOptions.bounds);
     },
     hideStoryMarkers() {
       this.storyMarkers.forEach((marker) => {
@@ -340,11 +351,7 @@ export default {
               this.map.setLayoutProperty(path.id, "visibility", "visible");
               this.map.setPaintProperty(path.id, "line-opacity", 1);
 
-              this.map.fitBounds(this.boundsPaths[index], {
-                padding: { top: 50, bottom: 50, left: 600, right: 100 }, // hardcoded values for now
-                duration: 1000,
-                maxZoom: 15,
-              });
+              this.fitBounds(this.boundsPaths[index]);
             }
           });
         } else {
@@ -376,6 +383,10 @@ export default {
       center: this.mapOptions.center, // starting position [lng, lat]
       zoom: this.mapOptions.zoom, // starting zoom
     });
+
+    this.map
+      .on("dragstart", this.handleDragStart)
+      .on("dragend", this.handleDragEnd);
 
     this.handleResize = this.handleResize.bind(this);
     window.addEventListener("resize", this.handleResize);

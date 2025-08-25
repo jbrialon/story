@@ -35,7 +35,7 @@ export default {
       this.storyStore.setCurrentStoryIndex(index);
     },
     getMediaUrl(story) {
-      return getMediaUrl(story, story.cover, story.lastUpdate);
+      return getMediaUrl(story, story.cover);
     },
     onAfterLeave() {
       // after we leave the story, reset the media index to 0 so when we go back we start at the first media
@@ -184,7 +184,6 @@ export default {
       .stories__name {
         opacity: 1;
       }
-
       .stories__button {
         cursor: pointer;
       }
@@ -241,12 +240,6 @@ export default {
     &.viewed {
       &:before {
         opacity: 0.4;
-      }
-    }
-
-    &.loading {
-      &:before {
-        // TODO: add loading animation
       }
     }
 
