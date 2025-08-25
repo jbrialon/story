@@ -19,13 +19,10 @@
 
 <script>
 import { useStoryStore } from "../stores/storyStore";
+import { getCurrentLabel } from "../utils/timelineUtils";
 
 export default {
   name: "Navigation",
-  setup() {
-    const storyStore = useStoryStore();
-    return { storyStore };
-  },
   props: {
     currentVideoPlaying: {
       type: Object,
@@ -36,6 +33,14 @@ export default {
       type: Object,
       required: true,
     },
+    nextMedia: {
+      type: Function,
+      required: true,
+    },
+    prevMedia: {
+      type: Function,
+      required: true,
+    },
   },
   data() {
     return {
@@ -43,25 +48,51 @@ export default {
       maxHoldDuration: 300,
     };
   },
+  setup() {
+    const storyStore = useStoryStore();
+
+    return { storyStore };
+  },
   computed: {
+    currentStoryIndex() {
+      return this.storyStore.currentStoryIndex;
+    },
     currentMediaIndex() {
-      return this.storyStore.mediaIndex[this.storyStore.currentStoryIndex];
+      return this.storyStore.mediaIndex[this.currentStoryIndex];
     },
   },
   methods: {
     next() {
-      // improve this
-      const page = `bullet-${this.currentMediaIndex}`;
-      this.tl.seek(page).play();
-      this.storyStore.nextMedia();
+      this.nextMedia();
+      const label = `bullet-${this.currentMediaIndex}`;
+      const currentLabel = getCurrentLabel(this.tl);
+
+      if (label !== currentLabel) {
+        console.log("ici");
+        this.tl.seek(label).play();
+      }
     },
     prev() {
-      this.storyStore.prevMedia();
+      const currentLabel = getCurrentLabel(this.tl);
+      const currentLabelTime = this.tl.labels[currentLabel];
 
-      // improve this
-      if (this.currentMediaIndex > 0) {
-        const page = `bullet-${this.currentMediaIndex - 1}`;
-        this.tl.seek(page).play();
+      // we substract the time of the full timeline to the current time to get the progress in the current media
+      const progress = this.tl.time() - currentLabelTime;
+
+      // if the progress is less than 1.5, we go to the previous media
+      if (progress < 1.5) {
+        this.prevMedia();
+        const label = `bullet-${this.currentMediaIndex}`;
+        this.tl.seek(label).play();
+      } else {
+        // if the progress is greater than 1.5, we reset the time to the beginning of the current media
+        this.tl.seek(currentLabel).play();
+
+        // and if the media is a video, we resume it to the beginning
+        if (this.currentVideoPlaying) {
+          this.currentVideoPlaying.currentTime = 0;
+          this.currentVideoPlaying.play();
+        }
       }
     },
     handleEventDown(event) {

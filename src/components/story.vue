@@ -49,14 +49,18 @@ export default {
 
       this.controlVideoPlayback();
 
-      // TODO: improve this
-      if (this.currentMediaIndex === 1) {
-        console.log("we are on the second media, playing");
-        this.tl.play();
-      }
       if (this.currentMediaIndex === this.storyData.medias.length - 1) {
         this.storyStore.setStoryViewed(this.index, true);
       }
+    },
+    "storyStore.mapInteracted": {
+      handler(interacted) {
+        if (interacted) {
+          this.tl.pause();
+        } else {
+          this.tl.play();
+        }
+      },
     },
   },
   methods: {
@@ -79,7 +83,7 @@ export default {
         .toFixed(0)}m d+`;
     },
     getMediaUrl(src) {
-      return getMediaUrl(this.storyData, src, this.storyData.lastUpdate);
+      return getMediaUrl(this.storyData, src);
     },
     getClass(photo) {
       let landscape = photo.size.width > photo.size.height;
@@ -112,8 +116,8 @@ export default {
       <div class="story__content" v-if="!loading && storyData">
         <Pagination
           :medias="storyData.medias"
-          :currentMediaIndex="currentMediaIndex"
           :tl="tl"
+          :nextMedia="storyStore.nextMedia"
         />
         <div class="story__header" v-if="currentMediaIndex !== 0">
           <div class="story__header-title">
@@ -123,7 +127,12 @@ export default {
             {{ storyData.medias[currentMediaIndex].exif.formattedDate }}
           </div>
         </div>
-        <Navigation :currentVideoPlaying="currentVideoPlaying" :tl="tl" />
+        <Navigation
+          :currentVideoPlaying="currentVideoPlaying"
+          :tl="tl"
+          :nextMedia="storyStore.nextMedia"
+          :prevMedia="storyStore.prevMedia"
+        />
         <div class="story__media-container">
           <div
             class="story__media"

@@ -7,47 +7,37 @@
 </template>
 
 <script>
-import { useStoryStore } from "../stores/storyStore.js";
-
 export default {
   name: "Pagination",
-  setup() {
-    const storyStore = useStoryStore();
-    return { storyStore };
-  },
   props: {
     medias: {
       type: Array,
-      required: true,
-    },
-    currentMediaIndex: {
-      type: Number,
       required: true,
     },
     tl: {
       type: Object,
       required: true,
     },
+    nextMedia: {
+      type: Function,
+      required: true,
+    },
   },
   mounted() {
-    // this.tl.clear();
     this.medias.forEach((media, index) => {
       const duration = media.type === "video" ? media.duration : 5;
-      this.tl
-        .to(this.$refs.progress[index], {
-          width: "100%",
-          duration,
-          ease: "linear",
-          onComplete: () => {
-            this.storyStore.nextMedia();
-            if (index === this.medias.length - 1) {
-              console.log("we are on the last media, pausing");
-              this.tl.pause();
-            }
-          },
-        })
-        .addLabel(`bullet-${index}`);
+      const label = `bullet-${index}`;
+      this.tl.addLabel(label).to(this.$refs.progress[index], {
+        width: "100%",
+        duration,
+        ease: "linear",
+        onComplete: () => this.nextMedia(),
+      });
     });
+  },
+  beforeUnmount() {
+    this.tl.clear();
+    this.tl.kill();
   },
 };
 </script>
