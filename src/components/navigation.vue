@@ -57,8 +57,14 @@ export default {
     currentStoryIndex() {
       return this.storyStore.currentStoryIndex;
     },
+    nbStories() {
+      return this.storyStore.storyData.length;
+    },
     currentMediaIndex() {
       return this.storyStore.mediaIndex[this.currentStoryIndex];
+    },
+    nbMedias() {
+      return this.storyStore.storyData[this.currentStoryIndex].medias.length;
     },
   },
   methods: {
@@ -68,7 +74,6 @@ export default {
       const currentLabel = getCurrentLabel(this.tl);
 
       if (label !== currentLabel) {
-        console.log("ici");
         this.tl.seek(label).play();
       }
     },
@@ -77,10 +82,10 @@ export default {
       const currentLabelTime = this.tl.labels[currentLabel];
 
       // we substract the time of the full timeline to the current time to get the progress in the current media
-      const progress = this.tl.time() - currentLabelTime;
+      const mediaProgress = this.tl.time() - currentLabelTime;
 
       // if the progress is less than 1.5, we go to the previous media
-      if (progress < 1.5) {
+      if (mediaProgress < 1.5) {
         this.prevMedia();
         const label = `bullet-${this.currentMediaIndex}`;
         this.tl.seek(label).play();
@@ -97,7 +102,6 @@ export default {
     },
     handleEventDown(event) {
       event.preventDefault();
-
       this.mouseDown = true;
       this.mouseDownTime = Date.now();
 
@@ -108,7 +112,6 @@ export default {
     },
     handleEventUp(event) {
       event.preventDefault();
-
       const action = event.target.dataset.action;
 
       this.mouseDown = false;
@@ -117,14 +120,22 @@ export default {
 
         if (holdDuration > this.maxHoldDuration) {
           this.mouseDownTime = null;
-          // if we release after holding too long, play the video
           this.tl.play();
-
+          // if we release after holding too long, play the video
           if (this.currentVideoPlaying) {
             this.currentVideoPlaying.play();
           }
           return;
         }
+      }
+
+      // if we are on the last media of the last storyand  the media is a video, we play the video
+      if (
+        this.currentStoryIndex === this.nbStories - 1 &&
+        this.currentMediaIndex === this.nbMedias - 1 &&
+        this.currentVideoPlaying
+      ) {
+        this.currentVideoPlaying.play();
       }
 
       if (action === "prev") {
