@@ -146,6 +146,28 @@ export default {
 
       this.mouseDownTime = null;
     },
+    handleVisibilityChange() {
+      if (document.hidden) {
+        this.tl.pause();
+        if (this.currentVideoPlaying) {
+          this.currentVideoPlaying.pause();
+        }
+      } else {
+        this.tl.play();
+        if (this.currentVideoPlaying) {
+          this.currentVideoPlaying.play();
+        }
+      }
+    },
+  },
+  mounted() {
+    document.addEventListener("visibilitychange", this.handleVisibilityChange);
+  },
+  beforeUnmount() {
+    document.removeEventListener(
+      "visibilitychange",
+      this.handleVisibilityChange
+    );
   },
 };
 </script>

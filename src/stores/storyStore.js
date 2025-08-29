@@ -3,7 +3,7 @@ import MobileDetect from "mobile-detect";
 
 import Preloader from "../utils/Preloader.js";
 import { getMediaUrl } from "../utils/imageUtils.js";
-import { formatDate, parseExifDate } from "../utils/dateUtils.js";
+import { formatDate, parseDate } from "../utils/dateUtils.js";
 import { setStoriesListHeight } from "../utils/sizeUtils.js";
 
 const isMobile = new MobileDetect(window.navigator.userAgent).mobile();
@@ -133,9 +133,9 @@ export const useStoryStore = defineStore("story", {
         // Sort stories by date (newest first, oldest last) and format dates
         const stories = data.stories
           .sort((a, b) => {
-            // Use parseExifDate utility for consistent date parsing
-            const dateA = parseExifDate(a.date);
-            const dateB = parseExifDate(b.date);
+            // Use parseDate utility for consistent date parsing
+            const dateA = parseDate(a.date);
+            const dateB = parseDate(b.date);
 
             // Handle cases where parsing might fail
             if (!dateA && !dateB) return 0;
