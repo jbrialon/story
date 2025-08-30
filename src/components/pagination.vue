@@ -1,5 +1,5 @@
 <template>
-  <div class="pagination">
+  <div class="pagination" :style="margin">
     <div class="pagination__bullet" v-for="index in medias.length" :key="index">
       <div class="pagination__bullet-progress" ref="progress"></div>
     </div>
@@ -21,6 +21,16 @@ export default {
     nextMedia: {
       type: Function,
       required: true,
+    },
+  },
+  computed: {
+    margin() {
+      const value = this.medias.length;
+      const margin = Math.max(
+        4,
+        Math.min(8, value < 20 ? 8 : value < 30 ? 6 : 4)
+      );
+      return `--bullet-margin: ${margin}px`;
     },
   },
   mounted() {
@@ -52,11 +62,12 @@ export default {
   right: 0px;
   top: 10px;
   bottom: unset;
-  max-width: calc(100% - 10px);
+  max-width: calc(100% - (10px + var(--bullet-margin)));
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
   z-index: $z-pagination;
+  gap: var(--bullet-margin);
 
   &__bullet {
     width: 100%;
@@ -68,7 +79,8 @@ export default {
     overflow: hidden;
     box-shadow: 0 0 1px #00000059;
     opacity: 1;
-    margin: 0 4px;
+
+    margin: 0;
 
     &:first-child {
       .pagination__bullet-progress {

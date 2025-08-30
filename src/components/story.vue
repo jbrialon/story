@@ -57,8 +57,14 @@ export default {
       handler(interacted) {
         if (interacted) {
           this.tl.pause();
+          if (this.currentVideoPlaying) {
+            this.currentVideoPlaying.pause();
+          }
         } else {
           this.tl.play();
+          if (this.currentMediaIndex) {
+            this.currentVideoPlaying.play();
+          }
         }
       },
     },
@@ -175,14 +181,12 @@ export default {
                 preload="metadata"
               />
             </template>
-            <ul
-              class="story__media-description"
-              v-if="media.exif.description.length > 0"
-            >
-              <li v-for="(desc, index) in media.exif.description" :key="index">
-                {{ desc }}
-              </li>
-            </ul>
+            <p class="story__media-title" v-if="media.exif.title">
+              {{ media.exif.title }}
+            </p>
+            <p class="story__media-description" v-if="media.exif.description">
+              {{ media.exif.description }}
+            </p>
           </div>
         </div>
       </div>
@@ -254,6 +258,12 @@ export default {
 
     &.show {
       opacity: 1;
+
+      .story__media-description {
+        opacity: 1;
+        transform: translateX(0);
+        transition: all 600ms $easing;
+      }
     }
 
     &.portrait {
@@ -319,41 +329,37 @@ export default {
       }
     }
 
+    &-title,
     &-description {
       position: absolute;
-      bottom: 15px;
-      left: 15px;
-      right: 15px;
       z-index: $z-content;
+      opacity: 1;
+      width: fit-content;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.2;
+      padding: 10px 12px;
       margin: 0;
-      padding: 0;
-      list-style: none;
-      display: flex;
-      flex-direction: column;
+      background: rgba(0, 0, 0, 0.6);
+      text-shadow: 0px 0px 4px rgba(0, 0, 0, 0.35);
+      letter-spacing: 0.06em;
+      backdrop-filter: blur(3px);
+      border-radius: 10px;
+      text-transform: uppercase;
+      // transform: translateX(-100%);
+    }
 
-      li {
-        display: inline-block;
-        width: fit-content;
-        color: #fff;
-        font-size: 14px;
-        font-weight: 700;
-        line-height: 1.2;
-        padding: 10px 12px;
-        background: rgba($c-grey-light, 0.2);
-        text-shadow: 0px 0px 4px rgba(0, 0, 0, 0.35);
-        letter-spacing: 0.06em;
-        backdrop-filter: blur(3px);
-        border-radius: 10px;
-        text-transform: uppercase;
+    &-title {
+      top: 85px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
 
-        &:first-child {
-          margin-bottom: 10px;
-        }
-
-        &:only-child {
-          margin-bottom: 0;
-        }
-      }
+    &-description {
+      bottom: 45px;
+      left: 25px;
+      right: 25px;
     }
   }
 

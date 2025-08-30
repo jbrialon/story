@@ -13,6 +13,7 @@ export default {
   data() {
     return {
       map: null,
+      mapLoaded: false,
       mapOptions: {
         token:
           "pk.eyJ1IjoiamJyaWFsb24iLCJhIjoiZjJkNjkyNDNiMzU0YjAxY2FjNGZlMjU3MGFiYjYyZmQifQ.lwFTmFgGxSuvfoJdTcx7Jg",
@@ -31,29 +32,26 @@ export default {
     storiesData() {
       return this.storyStore.storyData;
     },
+    storiesLoading() {
+      return this.storyStore.storiesLoading;
+    },
     currentStoryIndex() {
       return this.storyStore.currentStoryIndex;
     },
     storyMediaIndex() {
       return this.storyStore.mediaIndex[this.currentStoryIndex];
     },
+    isReady() {
+      const allStoriesLoaded = this.storyStore.storiesLoading.every(
+        (loading) => !loading
+      );
+      return allStoriesLoaded && this.mapLoaded;
+    },
   },
   watch: {
-    "storyStore.stories": {
-      handler(stories) {
-        if (stories && stories.length > 0) {
-          stories.forEach((story, index) => {
-            if (story.location) {
-              this.createStoryMarker(story, index);
-            }
-          });
-        }
-      },
-      deep: true,
-    },
-    "storyStore.storiesLoading": {
-      handler(storiesLoading) {
-        storiesLoading.forEach((loading, index) => {
+    isReady(value) {
+      if (value) {
+        this.storiesLoading.forEach((loading, index) => {
           if (loading === false) {
             const marker = this.getStoryMarker(index);
             if (marker) {
@@ -63,6 +61,17 @@ export default {
             }
           }
         });
+      }
+    },
+    "storyStore.stories": {
+      handler(stories) {
+        if (stories && stories.length > 0) {
+          stories.forEach((story, index) => {
+            if (story.location) {
+              this.createStoryMarker(story, index);
+            }
+          });
+        }
       },
       deep: true,
     },
@@ -382,6 +391,8 @@ export default {
       style: this.mapOptions.style, // stylesheet location
       center: this.mapOptions.center, // starting position [lng, lat]
       zoom: this.mapOptions.zoom, // starting zoom
+    }).on("load", () => {
+      this.mapLoaded = true;
     });
 
     this.map
