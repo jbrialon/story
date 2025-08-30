@@ -271,9 +271,10 @@ export default {
     display: block;
     min-width: 95px;
     font-size: 13px;
+    letter-spacing: 0.01rem;
     font-weight: 500;
     line-height: 1.1;
-    margin-top: 10px;
+    margin-top: 11px;
     position: absolute;
     top: 70px;
     opacity: 0;

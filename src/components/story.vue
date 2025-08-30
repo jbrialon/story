@@ -7,6 +7,7 @@ import { formatDate } from "../utils/dateUtils.js";
 import Loader from "./loader.vue";
 import Navigation from "./navigation.vue";
 import Pagination from "./pagination.vue";
+import Content from "./content.vue";
 
 export default {
   name: "Story",
@@ -31,7 +32,7 @@ export default {
 
     return { storyStore, tl };
   },
-  components: { Loader, Navigation, Pagination },
+  components: { Loader, Navigation, Pagination, Content },
   computed: {
     storyData() {
       return this.storyStore.getStoryData(this.index);
@@ -76,7 +77,10 @@ export default {
       const startDate = formatDate(stats[0].timestamp);
       const endDate = formatDate(stats[stats.length - 1].timestamp);
 
-      return `${startDate} → ${endDate}`;
+      return {
+        startDate,
+        endDate,
+      };
     },
     getDistance(stats) {
       return `${stats
@@ -86,7 +90,7 @@ export default {
     getElevation(stats) {
       return `${stats
         .reduce((acc, curr) => acc + curr.totalElevationGainM, 0)
-        .toFixed(0)}m d+`;
+        .toFixed(0)}m`;
     },
     getMediaUrl(src) {
       return getMediaUrl(this.storyData, src);
@@ -154,13 +158,16 @@ export default {
                   {{ storyData.story.name }}
                 </h2>
                 <p>
+                  <i class="bx bx-directions"></i>
+                  {{ getDistance(storyData.stats) }}
                   <i class="bx bx-mountain-peak"></i>
-                  {{ getDistance(storyData.stats) }} //
                   {{ getElevation(storyData.stats) }}
                 </p>
                 <p>
                   <i class="bx bx-calendar-alt"></i>
-                  {{ getDateRange(storyData.stats) }}
+                  {{ getDateRange(storyData.stats).startDate }}
+                  <i class="bx bx-arrow-right-stroke"></i>
+                  {{ getDateRange(storyData.stats).endDate }}
                 </p>
               </div>
               <img
@@ -181,12 +188,7 @@ export default {
                 preload="metadata"
               />
             </template>
-            <p class="story__media-title" v-if="media.exif.title">
-              {{ media.exif.title }}
-            </p>
-            <p class="story__media-description" v-if="media.exif.description">
-              {{ media.exif.description }}
-            </p>
+            <Content :exif="media.exif"></Content>
           </div>
         </div>
       </div>
@@ -258,12 +260,6 @@ export default {
 
     &.show {
       opacity: 1;
-
-      .story__media-description {
-        opacity: 1;
-        transform: translateX(0);
-        transition: all 600ms $easing;
-      }
     }
 
     &.portrait {
@@ -298,7 +294,7 @@ export default {
       flex-direction: column;
       justify-content: flex-start;
       align-items: center;
-      padding: 95px 15px 15px 15px;
+      padding: 75px 15px 15px 15px;
       color: #fff;
 
       p,
@@ -308,7 +304,7 @@ export default {
         gap: 10px;
         font-size: 14px;
         font-weight: 700;
-        line-height: 1.2;
+        line-height: 1;
         padding: 10px 12px;
         margin: 0 0 15px 0;
         background: rgba($c-grey-light, 0.2);
@@ -324,42 +320,15 @@ export default {
       }
 
       h2 {
-        font-size: 24px;
-        margin: 0 0 15px 0;
+        font-size: 32px;
+        margin: 0 0 35px 0;
+        padding: 8px 25px;
+        line-height: 1.2;
+
+        i {
+          font-size: 24px;
+        }
       }
-    }
-
-    &-title,
-    &-description {
-      position: absolute;
-      z-index: $z-content;
-      opacity: 1;
-      width: fit-content;
-      color: #fff;
-      font-size: 14px;
-      font-weight: 700;
-      line-height: 1.2;
-      padding: 10px 12px;
-      margin: 0;
-      background: rgba(0, 0, 0, 0.6);
-      text-shadow: 0px 0px 4px rgba(0, 0, 0, 0.35);
-      letter-spacing: 0.06em;
-      backdrop-filter: blur(3px);
-      border-radius: 10px;
-      text-transform: uppercase;
-      // transform: translateX(-100%);
-    }
-
-    &-title {
-      top: 85px;
-      left: 50%;
-      transform: translateX(-50%);
-    }
-
-    &-description {
-      bottom: 45px;
-      left: 25px;
-      right: 25px;
     }
   }
 
