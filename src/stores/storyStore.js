@@ -14,6 +14,7 @@ export const useStoryStore = defineStore("story", {
     loading: true,
     loadingTransitionComplete: false,
     currentStoryIndex: 0,
+    priorityIndex: 0,
     transitionDirection: 1,
     stories: [],
     storiesLoading: [], // Array to track loading state for individual stories
@@ -138,13 +139,13 @@ export const useStoryStore = defineStore("story", {
         this.setStories(stories);
 
         // Set up initial story and URL
-        const priorityIndex = this.setupInitialStory(stories);
+        this.priorityIndex = this.setupInitialStory(stories);
 
         // Preload covers and setup UI
         await this.preloadCovers();
 
         // Load stories data (priority first, then others)
-        await this.loadStoriesData(stories, priorityIndex);
+        await this.loadStoriesData(stories);
 
         return this.stories;
       } catch (error) {
@@ -207,13 +208,16 @@ export const useStoryStore = defineStore("story", {
       setStoriesListHeight();
     },
 
-    async loadStoriesData(stories, priorityIndex) {
+    async loadStoriesData(stories) {
       // Load priority story first
-      await this.fetchStoryData(stories[priorityIndex], priorityIndex);
+      await this.fetchStoryData(
+        stories[this.priorityIndex],
+        this.priorityIndex
+      );
 
       // Load remaining stories
       for (let i = 0; i < stories.length; i++) {
-        if (i !== priorityIndex) {
+        if (i !== this.priorityIndex) {
           await this.fetchStoryData(stories[i], i);
         }
       }

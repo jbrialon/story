@@ -35,6 +35,9 @@ export default {
     storiesLoading() {
       return this.storyStore.storiesLoading;
     },
+    priorityIndex() {
+      return this.storyStore.priorityIndex;
+    },
     currentStoryIndex() {
       return this.storyStore.currentStoryIndex;
     },
@@ -102,7 +105,10 @@ export default {
         if (stats && stats.length > 0) {
           if (storyMediaIndex === 0) {
             this.showStoryPath();
-          } else if (storyMediaIndex === 1 && this.currentStoryIndex === 0) {
+          } else if (
+            storyMediaIndex === 1 &&
+            this.currentStoryIndex === this.priorityIndex
+          ) {
             this.showStoryPath();
             this.showMediaMarkers();
             this.hideStoryMarkers();
