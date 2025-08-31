@@ -42,6 +42,14 @@ export const useStoryStore = defineStore("story", {
       this.transitionDirection = index > this.currentStoryIndex ? 1 : -1;
       this.mediaIndex[index] = 0;
       this.currentStoryIndex = index;
+      this.updateUrlHash();
+    },
+
+    updateUrlHash() {
+      if (this.stories.length > 0 && this.stories[this.currentStoryIndex]) {
+        const storyId = this.stories[this.currentStoryIndex].id;
+        window.location.hash = storyId;
+      }
     },
 
     nextStory() {
@@ -49,6 +57,7 @@ export const useStoryStore = defineStore("story", {
 
       this.transitionDirection = 1;
       this.currentStoryIndex++;
+      this.updateUrlHash();
     },
 
     prevStory() {
@@ -56,6 +65,7 @@ export const useStoryStore = defineStore("story", {
 
       this.transitionDirection = -1;
       this.currentStoryIndex--;
+      this.updateUrlHash();
     },
 
     setMapInteracted(interacted) {
@@ -120,50 +130,21 @@ export const useStoryStore = defineStore("story", {
         this.storyViewed[storyIndex] = viewed;
       }
     },
+    // ENTRY LOADING POINT
     async loadStories() {
       try {
-        const response = await fetch(`${apiUrl}/story`);
-
-        if (!response.ok) {
-          throw new Error("Network response was not ok " + response.statusText);
-        }
-
-        const data = await response.json();
-
-        // Sort stories by date (newest first, oldest last) and format dates
-        const stories = data.stories
-          .sort((a, b) => {
-            // Use parseDate utility for consistent date parsing
-            const dateA = parseDate(a.date);
-            const dateB = parseDate(b.date);
-
-            // Handle cases where parsing might fail
-            if (!dateA && !dateB) return 0;
-            if (!dateA) return 1; // Put invalid dates at the end
-            if (!dateB) return -1; // Put invalid dates at the end
-
-            return dateB - dateA; // Newest first (descending order)
-          })
-          .map((story) => ({
-            ...story,
-            formattedDate: formatDate(story.date),
-          }));
-
-        // Set stories in the store
+        // Fetch and process stories
+        const stories = await this.fetchStoriesList();
         this.setStories(stories);
 
-        // Preload cover images
-        const coverImages = this.stories
-          .filter((story) => story.cover)
-          .map((story) => getMediaUrl(story, story.cover, story.lastUpdate));
+        // Set up initial story and URL
+        const priorityIndex = this.setupInitialStory(stories);
 
-        await Preloader.load(coverImages);
-        setStoriesListHeight();
+        // Preload covers and setup UI
+        await this.preloadCovers();
 
-        // For Loop instead of ForEach to load stories sequentially
-        for (let i = 0; i < stories.length; i++) {
-          await this.fetchStoryData(stories[i], i);
-        }
+        // Load stories data (priority first, then others)
+        await this.loadStoriesData(stories, priorityIndex);
 
         return this.stories;
       } catch (error) {
@@ -172,7 +153,74 @@ export const useStoryStore = defineStore("story", {
       }
     },
 
+    async fetchStoriesList() {
+      const response = await fetch(`${apiUrl}/story`);
+      if (!response.ok) {
+        throw new Error("Network response was not ok " + response.statusText);
+      }
+
+      const data = await response.json();
+      return this.processStoriesData(data.stories);
+    },
+
+    processStoriesData(stories) {
+      return stories
+        .sort((a, b) => {
+          const dateA = parseDate(a.date);
+          const dateB = parseDate(b.date);
+          if (!dateA && !dateB) return 0;
+          if (!dateA) return 1;
+          if (!dateB) return -1;
+          return dateB - dateA;
+        })
+        .map((story) => ({
+          ...story,
+          formattedDate: formatDate(story.date),
+        }));
+    },
+
+    setupInitialStory(stories) {
+      const hash = window.location.hash.slice(1);
+      let priorityIndex = 0;
+
+      if (hash) {
+        const hashIndex = stories.findIndex((story) => story.id === hash);
+        if (hashIndex !== -1) {
+          priorityIndex = hashIndex;
+          this.currentStoryIndex = hashIndex;
+        } else {
+          window.location.hash = stories[0].id;
+        }
+      } else {
+        window.location.hash = stories[0].id;
+      }
+
+      return priorityIndex;
+    },
+
+    async preloadCovers() {
+      const coverImages = this.stories
+        .filter((story) => story.cover)
+        .map((story) => getMediaUrl(story, story.cover, story.lastUpdate));
+
+      await Preloader.load(coverImages);
+      setStoriesListHeight();
+    },
+
+    async loadStoriesData(stories, priorityIndex) {
+      // Load priority story first
+      await this.fetchStoryData(stories[priorityIndex], priorityIndex);
+
+      // Load remaining stories
+      for (let i = 0; i < stories.length; i++) {
+        if (i !== priorityIndex) {
+          await this.fetchStoryData(stories[i], i);
+        }
+      }
+    },
+
     async fetchStoryData(story, index) {
+      console.log("loading", story.name);
       try {
         // Fetch story data
         const response = await fetch(`${apiUrl}/story/${story.id}`);
@@ -181,70 +229,83 @@ export const useStoryStore = defineStore("story", {
         }
         const data = await response.json();
 
-        // Format and prepare story data
-        const storyData = {
-          ...data.data,
-          medias: data.data.medias
-            .map((media) => ({
-              ...media,
-              exif: {
-                ...media.exif,
-                formattedDate: media.exif?.date
-                  ? formatDate(media.exif.date)
-                  : null,
-              },
-            }))
-            .sort((a, b) => {
-              const numA = a.src.match(/\d+/)?.[0] || "";
-              const numB = b.src.match(/\d+/)?.[0] || "";
-              return numA.localeCompare(numB, undefined, { numeric: true });
-            }),
-        };
-
-        // Store in state
+        // Process and store story data
+        const storyData = this.processStoryData(data.data);
         this.setStoryData(index, storyData);
 
-        // Preload photos
-        const medias = storyData.medias.map((media) =>
-          getMediaUrl(story, media.src)
-        );
-        await Preloader.load(medias);
-
-        // Load path JSON files if stats exist
-        // we don't load the json on mobile because we don't show the map
-        if (storyData.stats && storyData.stats.length > 0 && !isMobile) {
-          await Promise.all(
-            storyData.stats.map(async (stat, statIndex) => {
-              const pathUrl = `${apiUrl}/story/${encodeURIComponent(story.id)}${
-                stat.pathJson
-              }?v=${story.lastUpdate}`;
-              const pathResponse = await fetch(pathUrl);
-              if (pathResponse.ok) {
-                const pathData = await pathResponse.json();
-                if (pathData) {
-                  storyData.stats[statIndex] = {
-                    ...stat,
-                    path: pathData,
-                  };
-                }
-              } else {
-                console.warn(`Could not fetch path: ${pathUrl}`);
-              }
-            })
-          );
-        }
+        // Load additional resources
+        await this.loadStoryResources(story, storyData);
 
         // Update loading states
-        if (index === 0) {
-          this.setLoading(false);
-        }
-        this.setStoryLoading(index, false);
+        this.updateLoadingStates(index);
 
         return storyData;
       } catch (error) {
         console.error("Error fetching story data:", error);
         throw error;
       }
+    },
+
+    processStoryData(data) {
+      return {
+        ...data,
+        medias: data.medias
+          .map((media) => ({
+            ...media,
+            exif: {
+              ...media.exif,
+              formattedDate: media.exif?.date
+                ? formatDate(media.exif.date)
+                : null,
+            },
+          }))
+          .sort((a, b) => {
+            const numA = a.src.match(/\d+/)?.[0] || "";
+            const numB = b.src.match(/\d+/)?.[0] || "";
+            return numA.localeCompare(numB, undefined, { numeric: true });
+          }),
+      };
+    },
+
+    async loadStoryResources(story, storyData) {
+      // Preload photos
+      const medias = storyData.medias.map((media) =>
+        getMediaUrl(story, media.src)
+      );
+      await Preloader.load(medias);
+
+      // Load map paths if needed
+      if (storyData.stats?.length > 0 && !isMobile) {
+        await this.loadStoryPaths(story, storyData);
+      }
+    },
+
+    async loadStoryPaths(story, storyData) {
+      await Promise.all(
+        storyData.stats.map(async (stat, statIndex) => {
+          const pathUrl = `${apiUrl}/story/${encodeURIComponent(story.id)}${
+            stat.pathJson
+          }?v=${story.lastUpdate}`;
+          try {
+            const pathResponse = await fetch(pathUrl);
+            if (pathResponse.ok) {
+              const pathData = await pathResponse.json();
+              if (pathData) {
+                storyData.stats[statIndex] = { ...stat, path: pathData };
+              }
+            }
+          } catch (error) {
+            console.warn(`Could not fetch path: ${pathUrl}`);
+          }
+        })
+      );
+    },
+
+    updateLoadingStates(index) {
+      if (index === this.currentStoryIndex) {
+        this.setLoading(false);
+      }
+      this.setStoryLoading(index, false);
     },
   },
 

@@ -38,15 +38,12 @@ export default {
     color: #fff;
     font-size: 14px;
     font-weight: 700;
-    line-height: 1.2;
+    line-height: 1.4;
     padding: 10px 12px;
     margin: 0;
     background: rgba(0, 0, 0, 0.6);
-    text-shadow: 0px 0px 4px rgba(0, 0, 0, 0.35);
-    letter-spacing: 0.06em;
     backdrop-filter: blur(3px);
     border-radius: 10px;
-    text-transform: uppercase;
   }
 
   &__title {
