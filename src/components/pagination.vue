@@ -35,7 +35,16 @@ export default {
   },
   mounted() {
     this.medias.forEach((media, index) => {
-      const duration = media.type === "video" ? media.duration : 5;
+      let duration = media.type === "video" ? media.duration : 5;
+
+      // Proportionally increase duration for long descriptions for photos
+      if (media.type !== "video") {
+        const descriptionLength = media.exif.description?.length || 0;
+        if (descriptionLength > 100) {
+          const extraSeconds = Math.ceil((descriptionLength - 100) / 50); // +1s for every 50 chars above 100
+          duration += extraSeconds;
+        }
+      }
       const label = `bullet-${index}`;
       this.tl.addLabel(label).to(this.$refs.progress[index], {
         width: "100%",

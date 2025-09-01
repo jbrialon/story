@@ -224,7 +224,6 @@ export const useStoryStore = defineStore("story", {
     },
 
     async fetchStoryData(story, index) {
-      console.log("loading", story.name);
       try {
         // Fetch story data
         const response = await fetch(`${apiUrl}/story/${story.id}`);
