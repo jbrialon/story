@@ -90,7 +90,7 @@ export default {
             <Story
               v-if="currentIndex === index"
               :storyId="story.id"
-              :index="index"
+              :storyIndex="index"
               class="stories__slide"
             />
           </Transition>
@@ -312,8 +312,9 @@ export default {
     position: absolute;
     width: 100%;
     height: 100%;
-    transform-style: preserve-3d;
     backface-visibility: hidden;
+    transform-style: preserve-3d;
+    transform: translateZ(0);
   }
 
   .cube-effect-next-enter-active,
@@ -322,7 +323,7 @@ export default {
   }
 
   .cube-effect-next-enter-from {
-    transform: rotateY(90deg);
+    transform: rotateY(90deg) translateZ(0);
   }
 
   .cube-effect-next-enter-to,
@@ -331,7 +332,7 @@ export default {
   }
 
   .cube-effect-next-leave-to {
-    transform: rotateY(-90deg);
+    transform: rotateY(-90deg) translateZ(0);
   }
 
   .cube-effect-prev-enter-active,
@@ -340,7 +341,7 @@ export default {
   }
 
   .cube-effect-prev-enter-from {
-    transform: rotateY(-90deg);
+    transform: rotateY(-90deg) translateZ(1px);
   }
 
   .cube-effect-prev-enter-to,
@@ -349,7 +350,7 @@ export default {
   }
 
   .cube-effect-prev-leave-to {
-    transform: rotateY(90deg);
+    transform: rotateY(90deg) translateZ(1px);
   }
 }
 </style>
