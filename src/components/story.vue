@@ -376,14 +376,14 @@ export default {
       border: none;
       background: none;
       margin: 0 0 0 auto;
-      padding: rem-calc(10px);
+      padding: rem-calc(12px);
       pointer-events: auto;
 
       i {
         color: #fff;
         position: relative;
-        top: rem-calc(2px);
-        font-size: rem-calc(22px);
+        top: rem-calc(1px);
+        font-size: rem-calc(18px);
       }
     }
   }
