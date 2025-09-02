@@ -69,9 +69,9 @@ export default {
   position: absolute;
   left: 0px;
   right: 0px;
-  top: 10px;
+  top: rem-calc(10px);
   bottom: unset;
-  max-width: calc(100% - (10px + var(--bullet-margin)));
+  max-width: calc(100% - (rem-calc(10px) + var(--bullet-margin)));
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
@@ -81,8 +81,8 @@ export default {
   &__bullet {
     width: 100%;
     flex-shrink: 10;
-    border-radius: 999px;
-    height: 3px;
+    border-radius: rem-calc(999px);
+    height: rem-calc(3px);
     background: rgba(255, 255, 255, 0.35);
     position: relative;
     overflow: hidden;

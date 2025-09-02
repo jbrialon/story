@@ -113,7 +113,7 @@ export default {
   transform: translateY(-50%);
   background: white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  border-radius: 35px;
+  border-radius: rem-calc(35px);
   overflow: hidden;
 
   @include small-only {
@@ -127,22 +127,23 @@ export default {
 
   &__list {
     list-style: none;
-    padding: 20px;
+    padding: rem-calc(20px);
     margin: 0;
     display: flex;
     flex-direction: row;
-    gap: 20px;
+    gap: rem-calc(20px);
     overflow-y: hidden;
     overflow-x: scroll;
     scrollbar-width: none;
     -ms-overflow-style: none;
+
     &::-webkit-scrollbar {
       display: none;
     }
 
     @include small-only {
-      padding: 10px;
-      gap: 10px;
+      padding: rem-calc(10px);
+      gap: rem-calc(10px);
     }
   }
 
@@ -159,21 +160,21 @@ export default {
       transform: translateX(-50%);
       border-radius: 50%;
       background: $c-grey-light;
-      width: 72px;
-      height: 72px;
+      width: rem-calc(72px);
+      height: rem-calc(72px);
       opacity: 0;
       background: linear-gradient(45deg, #eeeeee 10%, #dddddd 18%, #eeeeee 33%);
-      background-size: 800px 72px;
+      background-size: rem-calc(800px) rem-calc(72px);
       transition: opacity 0.3s $easing;
       animation: none;
     }
 
     @keyframes loading {
       0% {
-        background-position: -400px 0;
+        background-position: rem-calc(-400px) 0;
       }
       100% {
-        background-position: 400px 0;
+        background-position: rem-calc(400px) 0;
       }
     }
 
@@ -206,7 +207,7 @@ export default {
     align-items: center;
     justify-content: center;
     transition: opacity 0.3s $easing;
-    padding-bottom: 30px;
+    padding-bottom: rem-calc(30px);
     background: none;
     border: none;
 
@@ -218,7 +219,7 @@ export default {
   &__image {
     position: relative;
     border-radius: 50%;
-    padding: 6px;
+    padding: rem-calc(6px);
     transition: transform 600ms $easing;
     transform: scale(0);
 
@@ -246,10 +247,10 @@ export default {
     &:after {
       content: "";
       position: absolute;
-      left: 3px;
-      top: 3px;
-      right: 3px;
-      bottom: 3px;
+      left: rem-calc(3px);
+      top: rem-calc(3px);
+      right: rem-calc(3px);
+      bottom: rem-calc(3px);
       background: #fff;
       border-radius: 50%;
       z-index: 1;
@@ -259,8 +260,8 @@ export default {
       position: relative;
       z-index: 2;
       display: block;
-      width: 60px;
-      height: 60px;
+      width: rem-calc(60px);
+      height: rem-calc(60px);
       border-radius: 50%;
       object-fit: cover;
       object-position: center;
@@ -269,14 +270,14 @@ export default {
 
   &__name {
     display: block;
-    min-width: 95px;
-    font-size: 13px;
+    min-width: rem-calc(95px);
+    font-size: rem-calc(13px);
     letter-spacing: 0.01rem;
     font-weight: 500;
     line-height: 1.1;
-    margin-top: 11px;
+    margin-top: rem-calc(11px);
     position: absolute;
-    top: 70px;
+    top: rem-calc(70px);
     opacity: 0;
     transition: opacity 600ms $easing 600ms;
 
@@ -304,7 +305,7 @@ export default {
     width: 100%;
     height: 100%;
     position: relative;
-    perspective: 1000px;
+    perspective: rem-calc(1000px);
   }
 
   &__slide {

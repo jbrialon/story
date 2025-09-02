@@ -466,7 +466,7 @@ export default {
     &-circle {
       position: relative;
       border-radius: 50%;
-      padding: 6px;
+      padding: rem-calc(6px);
       background-image: linear-gradient(
         to right top,
         #ffc600 20%,
@@ -475,18 +475,17 @@ export default {
       );
       transition: opacity 300ms $easing, transform 600ms $easing,
         box-shadow 300ms $easing;
-
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 rem-calc(2px) rem-calc(8px) rgba(0, 0, 0, 0.3);
       transform: scale(0);
       opacity: 1;
 
       &:before {
         content: "";
         position: absolute;
-        left: 3px;
-        top: 3px;
-        right: 3px;
-        bottom: 3px;
+        left: rem-calc(3px);
+        top: rem-calc(3px);
+        right: rem-calc(3px);
+        bottom: rem-calc(3px);
         background: #fff;
         border-radius: 50%;
         z-index: 1;
@@ -494,7 +493,7 @@ export default {
 
       &:hover {
         transform: scale(1.1);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        box-shadow: 0 rem-calc(4px) rem-calc(12px) rgba(0, 0, 0, 0.4);
       }
     }
 
@@ -502,8 +501,8 @@ export default {
       position: relative;
       z-index: 2;
       display: block;
-      width: 60px;
-      height: 60px;
+      width: rem-calc(60px);
+      height: rem-calc(60px);
       border-radius: 50%;
       object-fit: cover;
       object-position: center;
@@ -517,7 +516,7 @@ export default {
     &:hover {
       .map__story-marker-circle {
         transform: scale(1.1);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        box-shadow: 0 rem-calc(4px) rem-calc(12px) rgba(0, 0, 0, 0.4);
       }
     }
 
@@ -533,17 +532,17 @@ export default {
       .map__story-marker-circle {
         background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
         transform: scale(1.2);
-        box-shadow: 0 4px 16px rgba(255, 107, 107, 0.4);
+        box-shadow: 0 rem-calc(4px) rem-calc(16px) rgba(255, 107, 107, 0.4);
       }
     }
 
     &-circle {
-      width: 30px;
-      height: 30px;
+      width: rem-calc(30px);
+      height: rem-calc(30px);
       border-radius: 50%;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border: 3px solid white;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      border: rem-calc(3px) solid white;
+      box-shadow: 0 rem-calc(2px) rem-calc(8px) rgba(0, 0, 0, 0.3);
       display: flex;
       align-items: center;
       justify-content: center;

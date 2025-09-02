@@ -24,6 +24,7 @@ export default {
   data() {
     return {
       currentVideoPlaying: null,
+      muted: false
     };
   },
   setup() {
@@ -113,6 +114,9 @@ export default {
         this.currentVideoPlaying = null;
       }
     },
+    toggleMute() {
+      this.muted = !this.muted
+    }
   },
 };
 </script>
@@ -136,6 +140,10 @@ export default {
           <div class="story__header-date">
             {{ storyData.medias[currentMediaIndex].exif.formattedDate }}
           </div>
+          <button class="story__header-audio" @click="toggleMute" v-if="storyData.medias[currentMediaIndex].type === 'video'">
+            <i v-if="muted" class="bx  bxs-volume-mute"></i>
+            <i v-else class="bx  bxs-volume-full"></i> 
+          </button>
         </div>
         <Navigation
           :currentVideoPlaying="currentVideoPlaying"
@@ -184,6 +192,7 @@ export default {
                 :src="getMediaUrl(media.src)"
                 :alt="storyData.story.name"
                 volume="0.35"
+                :muted="muted"
                 playsinline
                 preload="metadata"
               />
@@ -232,7 +241,7 @@ export default {
       left: 0;
       z-index: $z-gradient;
       content: "";
-      height: 100px;
+      height: rem-calc(100px);
       width: 100%;
       background-image: linear-gradient(
         to top,
@@ -294,7 +303,7 @@ export default {
       flex-direction: column;
       justify-content: flex-start;
       align-items: center;
-      padding: 75px 15px 15px 15px;
+      padding: rem-calc(75px) rem-calc(15px) rem-calc(15px) rem-calc(15px);
       color: #fff;
 
       p,
@@ -305,12 +314,12 @@ export default {
         font-size: 14px;
         font-weight: 700;
         line-height: 1;
-        padding: 10px 12px 10px 12px;
+        padding: rem-calc(10px) rem-calc(12px) rem-calc(10px) rem-calc(12px);
         margin: 0 0 15px 0;
         background: rgba($c-grey-light, 0.2);
         letter-spacing: 0.06em;
         backdrop-filter: blur(3px);
-        border-radius: 10px;
+        border-radius: rem-calc(10px);
 
         i {
           font-size: 18px;
@@ -318,9 +327,9 @@ export default {
       }
 
       h2 {
-        font-size: 32px;
-        margin: 0 0 35px 0;
-        padding: 8px 25px;
+        font-size: rem-calc(32px);
+        margin: 0 0 rem-calc(35px) 0;
+        padding: rem-calc(8px) rem-calc(25px);
         line-height: 1.2;
 
         i {
@@ -334,26 +343,43 @@ export default {
     display: flex;
     align-items: center;
     position: absolute;
-    top: 25px;
-    left: 10px;
-    height: 32px;
-    z-index: $z-navigation;
+    top: rem-calc(25px);
+    left: rem-calc(10px);
+    height: rem-calc(32px);
+    right: rem-calc(10px);
+    z-index: $z-navigation + 1;
     color: #fff;
     text-decoration: none;
-    user-select: none;
+    pointer-events: none;
     backface-visibility: hidden;
 
     &-title {
-      font-size: 14px;
+      font-size: rem-calc(14px);
       font-weight: 700;
-      margin-right: 12px;
+      margin-right: rem-calc(12px);
       text-shadow: 0px 0px 2px rgba(0, 0, 0, 0.35);
     }
 
     &-date {
-      font-size: 14px;
+      font-size: rem-calc(14px);
       font-weight: 400;
       text-shadow: 0px 0px 2px rgba(0, 0, 0, 0.35);
+    }
+
+    &-audio {
+      cursor: pointer;
+      display: block;
+      border: none;
+      background: none;
+      margin: 0 0 0 auto;
+      padding: rem-calc(10px);
+      pointer-events: auto;
+
+      i {
+        position: relative;
+        top: rem-calc(2px);
+        font-size: rem-calc(22px);
+      }
     }
   }
 }

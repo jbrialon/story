@@ -29,7 +29,7 @@ export default {
     position: absolute;
     content: "";
     display: block;
-    height: 30px;
+    height: rem-calc(30px);
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);

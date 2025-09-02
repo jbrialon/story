@@ -36,26 +36,26 @@ export default {
     opacity: 1;
     width: fit-content;
     color: #fff;
-    font-size: 14px;
+    font-size: rem-calc(14px);
     font-weight: 700;
     line-height: 1.4;
-    padding: 10px 12px;
+    padding: rem-calc(10px) rem-calc(12px);
     margin: 0;
     background: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(3px);
-    border-radius: 10px;
+    border-radius: rem-calc(10px);
   }
 
   &__title {
-    top: 85px;
+    top: rem-calc(85px);
     left: 50%;
     transform: translateX(-50%);
   }
 
   &__description {
-    bottom: 45px;
-    left: 25px;
-    right: 25px;
+    bottom: rem-calc(45px);
+    left: rem-calc(25px);
+    right: rem-calc(25px);
   }
 }
 </style>
