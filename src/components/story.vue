@@ -16,7 +16,7 @@ export default {
       type: String,
       required: true,
     },
-    index: {
+    storyIndex: {
       type: Number,
       required: true,
     },
@@ -24,7 +24,7 @@ export default {
   data() {
     return {
       currentVideoPlaying: null,
-      muted: false
+      muted: false,
     };
   },
   setup() {
@@ -36,13 +36,13 @@ export default {
   components: { Loader, Navigation, Pagination, Content },
   computed: {
     storyData() {
-      return this.storyStore.getStoryData(this.index);
+      return this.storyStore.getStoryData(this.storyIndex);
     },
     loading() {
-      return this.storyStore.getStoryLoading(this.index);
+      return this.storyStore.getStoryLoading(this.storyIndex);
     },
     currentMediaIndex() {
-      return this.storyStore.mediaIndex[this.index];
+      return this.storyStore.mediaIndex[this.storyIndex];
     },
   },
   watch: {
@@ -115,8 +115,8 @@ export default {
       }
     },
     toggleMute() {
-      this.muted = !this.muted
-    }
+      this.muted = !this.muted;
+    },
   },
 };
 </script>
@@ -140,9 +140,13 @@ export default {
           <div class="story__header-date">
             {{ storyData.medias[currentMediaIndex].exif.formattedDate }}
           </div>
-          <button class="story__header-audio" @click="toggleMute" v-if="storyData.medias[currentMediaIndex].type === 'video'">
-            <i v-if="muted" class="bx  bxs-volume-mute"></i>
-            <i v-else class="bx  bxs-volume-full"></i> 
+          <button
+            class="story__header-audio"
+            @click="toggleMute"
+            v-if="storyData.medias[currentMediaIndex].type === 'video'"
+          >
+            <i v-if="muted" class="bx bxs-volume-mute"></i>
+            <i v-else class="bx bxs-volume-full"></i>
           </button>
         </div>
         <Navigation
@@ -372,13 +376,14 @@ export default {
       border: none;
       background: none;
       margin: 0 0 0 auto;
-      padding: rem-calc(10px);
+      padding: rem-calc(12px);
       pointer-events: auto;
 
       i {
+        color: #fff;
         position: relative;
-        top: rem-calc(2px);
-        font-size: rem-calc(22px);
+        top: rem-calc(1px);
+        font-size: rem-calc(18px);
       }
     }
   }
