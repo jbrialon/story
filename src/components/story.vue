@@ -143,7 +143,10 @@ export default {
           <button
             class="story__header-audio"
             @click="toggleMute"
-            v-if="storyData.medias[currentMediaIndex].type === 'video'"
+            v-if="
+              storyData.medias[currentMediaIndex].type === 'video' &&
+              storyData.medias[currentMediaIndex].has_audio
+            "
           >
             <i v-if="muted" class="bx bxs-volume-mute"></i>
             <i v-else class="bx bxs-volume-full"></i>
