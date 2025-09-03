@@ -3,8 +3,15 @@
 </template>
 
 <script>
+import preloader from "../utils/Preloader.js";
+
 export default {
   name: "Loader",
+  mounted () {
+    preloader.on('loaded', (e) => {
+      // TODO : some animation
+    })
+  }
 };
 </script>
 

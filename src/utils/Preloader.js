@@ -2,7 +2,16 @@
 Image
 */
 const done = {};
-export default {
+
+class Preloader extends EventTarget {
+  constructor() {
+    if (Preloader.instance) {
+      return Preloader.instance;
+    }
+    super();
+    Preloader.instance = this;
+  }
+
   load(assets) {
     if (!Array.isArray(assets)) {
       return Promise.reject(
@@ -14,7 +23,6 @@ export default {
         if (done[src]) {
           return Promise.resolve();
         }
-        // console.log("preloading", src);
         if (src.includes(".mp4")) {
           return this.loadVideo(src);
         } else {
@@ -22,7 +30,8 @@ export default {
         }
       })
     );
-  },
+  }
+
   loadVideo(src) {
     return new Promise((resolve) => {
       const video = document.createElement("video");
@@ -36,6 +45,7 @@ export default {
 
       video.oncanplay = () => {
         done[src] = true;
+        this.dispatchEvent(new CustomEvent("loaded", { detail: {src} }));
         resolve();
         video.remove();
       };
@@ -49,19 +59,33 @@ export default {
 
       video.src = src;
     });
-  },
+  }
+
   loadImage(src) {
     return new Promise((resolve) => {
       let image = new Image();
-      image.onload = function () {
+      image.onload = () => {
+        done[src] = true;
+        this.dispatchEvent(new CustomEvent("loaded", { detail: {src} }));
         resolve();
       };
-      image.onerror = function (err) {
+      image.onerror = (err) => {
         console.error("Could not preload", src, err);
+        done[src] = true;
         resolve(); // resolve anyway
       };
       image.src = src;
-      done[src] = true;
     });
-  },
+  }
+
+  on(eventName, callback) {
+    this.addEventListener(eventName, callback);
+  }
+
+  off(eventName, callback) {
+    this.removeEventListener(eventName, callback);
+  }
 };
+
+const preloader = new Preloader();
+export default preloader;

@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import MobileDetect from "mobile-detect";
 
-import Preloader from "../utils/Preloader.js";
+import preloader from "../utils/Preloader.js";
 import { getMediaUrl } from "../utils/imageUtils.js";
 import { formatDate, parseDate } from "../utils/dateUtils.js";
 import { setStoriesListHeight } from "../utils/sizeUtils.js";
@@ -204,7 +204,7 @@ export const useStoryStore = defineStore("story", {
         .filter((story) => story.cover)
         .map((story) => getMediaUrl(story, story.cover, story.lastUpdate));
 
-      await Preloader.load(coverImages);
+      await preloader.load(coverImages);
       setStoriesListHeight();
     },
 
@@ -275,7 +275,7 @@ export const useStoryStore = defineStore("story", {
       const medias = storyData.medias.map((media) =>
         getMediaUrl(story, media.src)
       );
-      await Preloader.load(medias);
+      await preloader.load(medias);
 
       // Load map paths if needed
       if (storyData.stats?.length > 0 && !isMobile) {
