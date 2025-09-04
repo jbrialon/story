@@ -1,39 +1,10 @@
 <template>
-  <div class="loader">
-    <template v-for="(picture, index) in medias" :key="index">
-      <img
-        class="loader__picture"
-        :src="picture"
-        :style="{
-          '--random-rotation': Math.floor(Math.random() * 61) - 30 + 'deg',
-          '--random-scale': 0.8 + Math.random() * 0.4,
-        }"
-      />
-    </template>
-  </div>
+  <div class="loader"></div>
 </template>
 
 <script>
-import preloader from "../utils/Preloader.js";
-
 export default {
   name: "Loader",
-  data() {
-    return {
-      medias: [],
-    };
-  },
-  mounted() {
-    preloader.on("loaded", (e) => {
-      const src = e.detail.src;
-      if (src.includes(".jpg") && Math.random() >= 0.5) {
-        this.medias.push(e.detail.src);
-      }
-    });
-  },
-  unmounted() {
-    preloader.off("loaded");
-  },
 };
 </script>
 
@@ -75,16 +46,6 @@ export default {
         background-position: 50% 0, 75% 100%;
       }
     }
-  }
-
-  &__picture {
-    position: absolute;
-    width: 170px;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) rotate(var(--random-rotation, 15deg))
-      scale(var(--random-scale, 1));
-    border-radius: 10px;
   }
 }
 </style>
