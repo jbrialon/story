@@ -7,11 +7,22 @@ import preloader from "../utils/Preloader.js";
 
 export default {
   name: "Loader",
-  mounted () {
-    preloader.on('loaded', (e) => {
-      // TODO : some animation
-    })
-  }
+  data() {
+    return {
+      medias: [],
+    };
+  },
+  mounted() {
+    // preloader.on("loaded", (e) => {
+    //   const src = e.detail.src;
+    //   if (src.includes(".jpg")) {
+    //     this.medias.push(e.detail.src);
+    //   }
+    // });
+  },
+  unmounted() {
+    preloader.off("loaded");
+  },
 };
 </script>
 

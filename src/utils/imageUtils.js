@@ -4,10 +4,10 @@
  * @param {string} mediaPath - The media path
  * @returns {string} The complete media URL
  */
-const apiUrl = import.meta.env.VITE_API_URL;
+const cdnURL = import.meta.env.VITE_CDN_URL;
 
 export function getMediaUrl(story, mediaPath) {
-  return `${apiUrl}/story/${encodeURIComponent(story.id)}${mediaPath}?v=${
+  return `${cdnURL}/story/${encodeURIComponent(story.id)}${mediaPath}?v=${
     story.lastUpdate
   }`;
 }
