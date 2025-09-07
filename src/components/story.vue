@@ -1,9 +1,16 @@
 <script>
+// Libs
 import gsap from "gsap";
-import { getMediaUrl } from "../utils/imageUtils.js";
+
+// Store
+import { useAppStore } from "../stores/appStore.js";
 import { useStoryStore } from "../stores/storyStore.js";
+
+// Utils
+import { getMediaUrl } from "../utils/imageUtils.js";
 import { formatDate } from "../utils/dateUtils.js";
 
+// Components
 import Loader from "./loader.vue";
 import Navigation from "./navigation.vue";
 import Pagination from "./pagination.vue";
@@ -25,13 +32,15 @@ export default {
     return {
       currentVideoPlaying: null,
       muted: false,
+      mapMode: false,
     };
   },
   setup() {
+    const appStore = useAppStore();
     const storyStore = useStoryStore();
     const tl = gsap.timeline({ paused: true });
 
-    return { storyStore, tl };
+    return { appStore, storyStore, tl };
   },
   components: { Loader, Navigation, Pagination, Content },
   computed: {
@@ -96,10 +105,6 @@ export default {
     getMediaUrl(src) {
       return getMediaUrl(this.storyData, src);
     },
-    getClass(photo) {
-      let landscape = photo.size.width > photo.size.height;
-      return landscape ? "landscape" : "portrait";
-    },
     controlVideoPlayback() {
       const currentMedia = this.storyData.medias[this.currentMediaIndex];
       if (currentMedia.type === "video") {
@@ -116,6 +121,10 @@ export default {
     },
     toggleMute() {
       this.muted = !this.muted;
+    },
+    toggleMap() {
+      this.mapMode = !this.mapMode;
+      this.appStore.setMapMode(this.mapMode);
     },
   },
 };
@@ -140,17 +149,25 @@ export default {
           <div class="story__header-date">
             {{ storyData.medias[currentMediaIndex].exif.formattedDate }}
           </div>
-          <button
-            class="story__header-audio"
-            @click="toggleMute"
-            v-if="
-              storyData.medias[currentMediaIndex].type === 'video' &&
-              storyData.medias[currentMediaIndex].has_audio
-            "
-          >
-            <i v-if="muted" class="bx bxs-volume-mute"></i>
-            <i v-else class="bx bxs-volume-full"></i>
-          </button>
+          <div class="story__header-nav">
+            <button
+              class="story__header-button"
+              @click="toggleMute"
+              v-if="
+                storyData.medias[currentMediaIndex].type === 'video' &&
+                storyData.medias[currentMediaIndex].has_audio
+              "
+            >
+              <i v-if="muted" class="bx bxs-volume-mute"></i>
+              <i v-else class="bx bxs-volume-full"></i>
+            </button>
+            <button
+              class="story__header-button story__header-button--map"
+              @click="toggleMap()"
+            >
+              <i class="bx bx-map"></i>
+            </button>
+          </div>
         </div>
         <Navigation
           :currentVideoPlaying="currentVideoPlaying"
@@ -164,7 +181,7 @@ export default {
             v-for="(media, index) in storyData.medias"
             :class="{
               show: index === currentMediaIndex,
-              [getClass(media)]: true,
+              mapmode: mapMode,
             }"
           >
             <template v-if="media.type === 'photo'">
@@ -222,7 +239,7 @@ export default {
   position: absolute;
   top: 0;
   left: 0;
-  transform-origin: center center calc($stories-width / 2 * -1);
+  transform-origin: center center calc(var(--stories-width) / 2 * -1);
   transform: translateZ(1px);
 
   @include small-only {
@@ -246,7 +263,7 @@ export default {
       position: absolute;
       top: 0;
       left: 0;
-      z-index: $z-gradient;
+      z-index: var(--z-gradient);
       content: "";
       height: rem-calc(100px);
       width: 100%;
@@ -271,29 +288,29 @@ export default {
     width: 100%;
     height: 100%;
     opacity: 0;
-    transition: opacity 600ms $easing;
-    background-color: $c-grey-light;
+    transition: opacity 600ms var(--easing), height 600ms var(--easing);
+    background-color: var(--c-grey-light);
 
     &.show {
       opacity: 1;
     }
 
-    &.portrait {
-      img {
-        @include small-only {
-          object-fit: cover;
-        }
+    &.mapmode {
+      @include small-only {
+        height: calc(100% - var(--stories-list-height) + 25px);
       }
     }
-
     img,
     video {
       display: block;
       width: 100%;
       height: 100%;
       object-fit: contain;
-    }
 
+      @include small-only {
+        object-fit: cover;
+      }
+    }
     video {
       object-fit: cover;
     }
@@ -305,7 +322,7 @@ export default {
       left: 0;
       width: 100%;
       height: 100%;
-      z-index: $z-content;
+      z-index: var(--z-content);
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
@@ -323,7 +340,7 @@ export default {
         line-height: 1;
         padding: rem-calc(10px) rem-calc(12px) rem-calc(10px) rem-calc(12px);
         margin: 0 0 15px 0;
-        background: rgba($c-grey-light, 0.2);
+        background: rgba(var(--c-grey-light-rgb), 0.2);
         letter-spacing: 0.06em;
         backdrop-filter: blur(3px);
         border-radius: rem-calc(10px);
@@ -354,7 +371,7 @@ export default {
     left: rem-calc(10px);
     height: rem-calc(32px);
     right: rem-calc(10px);
-    z-index: $z-navigation + 1;
+    z-index: calc(var(--z-navigation) + 1);
     color: #fff;
     text-decoration: none;
     pointer-events: none;
@@ -373,14 +390,26 @@ export default {
       text-shadow: 0px 0px 2px rgba(0, 0, 0, 0.35);
     }
 
-    &-audio {
+    &-nav {
+      display: flex;
+      margin: 0 0 0 auto;
+    }
+
+    &-button {
       cursor: pointer;
       display: block;
       border: none;
       background: none;
-      margin: 0 0 0 auto;
       padding: rem-calc(12px);
       pointer-events: auto;
+
+      &--map {
+        display: none;
+
+        @include small-only {
+          display: block;
+        }
+      }
 
       i {
         color: #fff;

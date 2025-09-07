@@ -45,7 +45,9 @@ class Preloader extends EventTarget {
 
       video.oncanplay = () => {
         done[src] = true;
-        this.dispatchEvent(new CustomEvent("loaded", { detail: {src} }));
+        this.dispatchEvent(
+          new CustomEvent("loaded", { detail: { src, type: "video" } })
+        );
         resolve();
         video.remove();
       };
@@ -66,7 +68,9 @@ class Preloader extends EventTarget {
       let image = new Image();
       image.onload = () => {
         done[src] = true;
-        this.dispatchEvent(new CustomEvent("loaded", { detail: {src} }));
+        this.dispatchEvent(
+          new CustomEvent("loaded", { detail: { src, type: "photo" } })
+        );
         resolve();
       };
       image.onerror = (err) => {
@@ -85,7 +89,7 @@ class Preloader extends EventTarget {
   off(eventName, callback) {
     this.removeEventListener(eventName, callback);
   }
-};
+}
 
 const preloader = new Preloader();
 export default preloader;

@@ -75,7 +75,7 @@ export default {
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
-  z-index: $z-pagination;
+  z-index: var(--z-pagination);
   gap: var(--bullet-margin);
 
   &__bullet {

@@ -178,7 +178,7 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: $z-navigation;
+  z-index: var(--z-navigation);
 
   &__button {
     position: absolute;
@@ -188,7 +188,7 @@ export default {
     background: transparent;
     border: none;
     cursor: pointer;
-    z-index: $z-navigation;
+    z-index: var(--z-navigation);
     -webkit-tap-highlight-color: transparent !important;
 
     &:focus {

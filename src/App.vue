@@ -2,15 +2,11 @@
   <Transition name="fade" @after-leave="onLoadingTransitionComplete">
     <Loader class="waiting-screen" v-if="loading" />
   </Transition>
-  <Map v-if="!isMobile" />
-  <Stories />
-  <!-- <Goo /> -->
+  <Map />
+  <Stories v-cloak />
 </template>
 
 <script>
-// Utils
-import MobileDetect from "mobile-detect";
-
 // Components
 import Map from "./components/map.vue";
 import Stories from "./components/stories.vue";
@@ -20,17 +16,10 @@ import Loader from "./components/loader.vue";
 // Stores
 import { useStoryStore } from "./stores/storyStore.js";
 
-const md = new MobileDetect(window.navigator.userAgent);
-
 export default {
   setup() {
     const storyStore = useStoryStore();
     return { storyStore };
-  },
-  data() {
-    return {
-      isMobile: md.mobile(),
-    };
   },
   components: { Map, Stories, Goo, Loader },
   computed: {
