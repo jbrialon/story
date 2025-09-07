@@ -1,19 +1,34 @@
+<template>
+  <Transition name="slide-map" @after-enter="onAfterEnter">
+    <div v-show="mapMode" class="map">
+      <div
+        id="map-container"
+        class="map__container"
+        :class="{ show: showMap }"
+      ></div>
+    </div>
+  </Transition>
+</template>
+
 <script>
 import mapboxgl from "mapbox-gl";
 import { getMediaUrl } from "../utils/imageUtils";
 
+import { useAppStore } from "../stores/appStore.js";
 import { useStoryStore } from "../stores/storyStore.js";
 
 export default {
   name: "Map",
   setup() {
+    const appStore = useAppStore();
     const storyStore = useStoryStore();
-    return { storyStore };
+    return { appStore, storyStore };
   },
   data() {
     return {
       map: null,
       mapLoaded: false,
+      showMap: false,
       mapOptions: {
         token:
           "pk.eyJ1IjoiamJyaWFsb24iLCJhIjoiZjJkNjkyNDNiMzU0YjAxY2FjNGZlMjU3MGFiYjYyZmQifQ.lwFTmFgGxSuvfoJdTcx7Jg",
@@ -29,6 +44,12 @@ export default {
     };
   },
   computed: {
+    isMobile() {
+      return this.appStore.isMobile;
+    },
+    mapMode() {
+      return this.appStore.mapMode;
+    },
     storiesData() {
       return this.storyStore.storyData;
     },
@@ -54,6 +75,7 @@ export default {
   watch: {
     isReady(value) {
       if (value) {
+        console.log("isReady");
         this.storiesLoading.forEach((loading, index) => {
           if (loading === false) {
             const marker = this.getStoryMarker(index);
@@ -116,7 +138,7 @@ export default {
             if (media?.exif.GPS) {
               this.map.flyTo({
                 center: [media.exif.GPS.longitude, media.exif.GPS.latitude],
-                zoom: 12,
+                zoom: this.isMobile ? 9 : 12,
                 duration: 2000,
               });
             }
@@ -143,10 +165,13 @@ export default {
       return getMediaUrl(story, story.cover);
     },
     fitBounds(bounds) {
-      if (!bounds) return;
+      if (!bounds || !this.mapLoaded) return;
+      const padding = this.isMobile
+        ? { top: 25, bottom: 25, left: 25, right: 25 }
+        : { top: 50, bottom: 50, left: 600, right: 100 };
 
       this.map.fitBounds(bounds, {
-        padding: { top: 50, bottom: 50, left: 600, right: 100 }, // hardcoded values for now
+        padding,
         duration: 1000,
         maxZoom: 15,
       });
@@ -169,10 +194,16 @@ export default {
         this.storyStore.setMapInteracted(false);
       }, 15000);
     },
+    onAfterEnter() {
+      if (this.map) {
+        this.map.resize();
+        this.showMap = true;
+      }
+    },
     // ------------------------------------------------------------
     // Story markers management (Main Markers for the stories)
     // ------------------------------------------------------------
-    createStoryMarker(story, index) {
+    createStoryMarker(story, storyIndex) {
       const markerElement = document.createElement("div");
       const cover = this.getMediaUrl(story);
       markerElement.className = "map__marker";
@@ -183,7 +214,11 @@ export default {
       `;
 
       markerElement.addEventListener("click", () => {
-        this.storyStore.setCurrentStoryIndex(index);
+        if (this.currentStoryIndex !== storyIndex) {
+          this.storyStore.setCurrentStoryIndex(storyIndex);
+        } else {
+          this.storyStore.nextMedia();
+        }
       });
 
       const marker = new mapboxgl.Marker(markerElement);
@@ -197,7 +232,7 @@ export default {
       this.storyMarkers.push({
         marker: marker,
         element: markerElement,
-        storyIndex: index,
+        storyIndex,
       });
 
       this.mapOptions.bounds.extend([
@@ -323,6 +358,19 @@ export default {
           });
 
           // Add the line layer
+          const paint = this.isMobile
+            ? {
+                "line-color": "#667eea",
+                "line-width": 2,
+                "line-opacity": 0,
+                "line-dasharray": [3, 3],
+              }
+            : {
+                "line-color": "#667eea",
+                "line-width": 3,
+                "line-opacity": 0,
+                "line-dasharray": [2, 2],
+              };
           this.map.addLayer({
             id: `path-${storyIndex}-${statIndex}`,
             type: "line",
@@ -331,12 +379,7 @@ export default {
               "line-join": "round",
               "line-cap": "round",
             },
-            paint: {
-              "line-color": "#667eea",
-              "line-width": 3,
-              "line-opacity": 0,
-              "line-dasharray": [2, 2],
-            },
+            paint,
           });
 
           this.map.setLayoutProperty(
@@ -414,12 +457,6 @@ export default {
 };
 </script>
 
-<template>
-  <div class="map">
-    <div id="map-container" class="map__container"></div>
-  </div>
-</template>
-
 <style lang="scss">
 @use "../scss/vars" as *;
 @use "../scss/mixins" as *;
@@ -432,8 +469,34 @@ export default {
   width: 100%;
   height: 100%;
 
+  @include small-only {
+    z-index: var(--z-map);
+    top: auto;
+    width: 100%;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 33vh;
+    height: calc(var(--stories-list-height) * 2);
+    border-top-right-radius: 25px;
+    border-top-left-radius: 25px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+  }
+
   &__container {
     height: 100vh;
+
+    @include small-only {
+      height: 100%;
+      opacity: 0;
+      transition: opacity 600ms var(--easing) 100ms;
+    }
+
+    &.show {
+      opacity: 1;
+    }
   }
 
   &__marker {
@@ -473,8 +536,8 @@ export default {
         #ff0040,
         #e600cc 80%
       );
-      transition: opacity 300ms $easing, transform 600ms $easing,
-        box-shadow 300ms $easing;
+      transition: opacity 300ms var(--easing), transform 600ms var(--easing),
+        box-shadow 300ms var(--easing);
       box-shadow: 0 rem-calc(2px) rem-calc(8px) rgba(0, 0, 0, 0.3);
       transform: scale(0);
       opacity: 1;
@@ -546,9 +609,15 @@ export default {
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 300ms $easing;
+      transition: all 300ms var(--easing);
       opacity: 1;
       transform: scale(1);
+
+      @include small-only {
+        width: rem-calc(15px);
+        height: rem-calc(15px);
+        border: rem-calc(1px) solid white;
+      }
     }
   }
 }
