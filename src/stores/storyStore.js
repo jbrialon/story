@@ -6,8 +6,8 @@ import { getMediaUrl } from "../utils/imageUtils.js";
 import { formatDate, parseDate } from "../utils/dateUtils.js";
 import { setStoriesListHeight } from "../utils/sizeUtils.js";
 
-const isMobile = new MobileDetect(window.navigator.userAgent).mobile();
 const apiUrl = import.meta.env.VITE_API_URL;
+const cdnURL = import.meta.env.VITE_CDN_URL;
 
 export const useStoryStore = defineStore("story", {
   state: () => ({
@@ -278,7 +278,7 @@ export const useStoryStore = defineStore("story", {
       await preloader.load(medias);
 
       // Load map paths if needed
-      if (storyData.stats?.length > 0 && !isMobile) {
+      if (storyData.stats?.length > 0) {
         await this.loadStoryPaths(story, storyData);
       }
     },
@@ -286,7 +286,7 @@ export const useStoryStore = defineStore("story", {
     async loadStoryPaths(story, storyData) {
       await Promise.all(
         storyData.stats.map(async (stat, statIndex) => {
-          const pathUrl = `${apiUrl}/story/${encodeURIComponent(story.id)}${
+          const pathUrl = `${cdnURL}/story/${encodeURIComponent(story.id)}${
             stat.pathJson
           }?v=${story.lastUpdate}`;
           try {

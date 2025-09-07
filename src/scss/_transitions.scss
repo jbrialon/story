@@ -2,10 +2,20 @@
 
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 900ms $easing;
+  transition: opacity 900ms var(--easing);
 }
 
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+.slide-map-enter-active,
+.slide-map-leave-active {
+  transition: all 0.3s var(--easing);
+}
+
+.slide-map-enter-from,
+.slide-map-leave-to {
+  transform: translateY(100%);
 }

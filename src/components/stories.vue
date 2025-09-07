@@ -1,19 +1,24 @@
 <script>
 import { getMediaUrl } from "../utils/imageUtils";
 import { useStoryStore } from "../stores/storyStore.js";
+import { useAppStore } from "../stores/appStore.js";
 
 import Story from "./story.vue";
 
 export default {
   name: "Stories",
   setup() {
+    const appStore = useAppStore();
     const storyStore = useStoryStore();
-    return { storyStore };
+    return { appStore, storyStore };
   },
   components: {
     Story,
   },
   computed: {
+    mapMode() {
+      return this.appStore.mapMode;
+    },
     currentIndex() {
       return this.storyStore.currentStoryIndex;
     },
@@ -46,7 +51,7 @@ export default {
 </script>
 
 <template>
-  <div class="stories">
+  <div class="stories" :class="{ mapmode: mapMode }">
     <ul class="stories__list js-stories-list">
       <li
         v-for="(story, index) in stories"
@@ -106,7 +111,7 @@ export default {
 
 .stories {
   position: absolute;
-  width: $stories-width;
+  width: var(--stories-width);
   z-index: 10;
   top: 50%;
   left: 5vh;
@@ -123,6 +128,17 @@ export default {
     bottom: 0;
     border-radius: 0;
     transform: translateY(0);
+    transition: transform 600ms var(--easing);
+  }
+
+  @include tablet {
+    width: calc(var(--stories-width) - 80px);
+  }
+
+  &.mapmode {
+    @include small-only {
+      transform: translateY(calc(-1 * var(--stories-list-height)));
+    }
   }
 
   &__list {
@@ -159,13 +175,13 @@ export default {
       left: 50%;
       transform: translateX(-50%);
       border-radius: 50%;
-      background: $c-grey-light;
+      background: var(--c-grey-light);
       width: rem-calc(72px);
       height: rem-calc(72px);
       opacity: 0;
       background: linear-gradient(45deg, #eeeeee 10%, #dddddd 18%, #eeeeee 33%);
       background-size: rem-calc(800px) rem-calc(72px);
-      transition: opacity 0.3s $easing;
+      transition: opacity 0.3s var(--easing);
       animation: none;
     }
 
@@ -206,7 +222,7 @@ export default {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    transition: opacity 0.3s $easing;
+    transition: opacity 0.3s var(--easing);
     padding-bottom: rem-calc(30px);
     background: none;
     border: none;
@@ -220,7 +236,7 @@ export default {
     position: relative;
     border-radius: 50%;
     padding: rem-calc(6px);
-    transition: transform 600ms $easing;
+    transition: transform 600ms var(--easing);
     transform: scale(0);
 
     &:before {
@@ -235,7 +251,7 @@ export default {
         #ff0040,
         #e600cc 80%
       );
-      transition: opacity 0.3s $easing;
+      transition: opacity 0.3s var(--easing);
     }
 
     &.viewed {
@@ -279,7 +295,7 @@ export default {
     position: absolute;
     top: rem-calc(70px);
     opacity: 0;
-    transition: opacity 600ms $easing 600ms;
+    transition: opacity 600ms var(--easing) 600ms;
 
     @include small-only {
       display: none;
@@ -319,7 +335,7 @@ export default {
 
   .cube-effect-next-enter-active,
   .cube-effect-next-leave-active {
-    transition: transform 1000ms $easing;
+    transition: transform 1000ms var(--easing);
   }
 
   .cube-effect-next-enter-from {
@@ -337,7 +353,7 @@ export default {
 
   .cube-effect-prev-enter-active,
   .cube-effect-prev-leave-active {
-    transition: transform 1000ms $easing;
+    transition: transform 1000ms var(--easing);
   }
 
   .cube-effect-prev-enter-from {

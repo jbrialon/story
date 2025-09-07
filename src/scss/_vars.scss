@@ -1,17 +1,22 @@
-// easings
-$easing: cubic-bezier(0.33, 0, 0.2, 1);
-
 // breakpoints
 $medium: 768px !default;
+$large: 1366px !default;
 
-// sizes
-$stories-width: 436px;
+:root {
+  // sizes
+  --stories-width: 436px;
 
-// colors
-$c-grey-light: #e5e5e5;
+  // easings
+  --easing: cubic-bezier(0.33, 0, 0.2, 1);
 
-// z-index
-$z-gradient: 10;
-$z-pagination: 20;
-$z-content: 21;
-$z-navigation: 30;
+  // colors
+  --c-grey-light: #e5e5e5;
+  --c-grey-light-rgb: 229, 229, 229;
+
+  // z-index
+  --z-gradient: 10;
+  --z-pagination: 20;
+  --z-content: 25;
+  --z-navigation: 30;
+  --z-map: 40;
+}

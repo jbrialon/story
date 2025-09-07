@@ -32,7 +32,7 @@ export default {
   &__title,
   &__description {
     position: absolute;
-    z-index: $z-content;
+    z-index: var(--z-content);
     opacity: 1;
     width: fit-content;
     color: #fff;

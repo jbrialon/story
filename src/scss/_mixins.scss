@@ -1,5 +1,5 @@
-@use 'sass:math';
-@use 'sass:list';
+@use "sass:math";
+@use "sass:list";
 
 @use "vars" as *;
 
@@ -10,8 +10,8 @@
     }
   }
 
-  @if $media-query == ipad {
-    @media all and (min-width: #{$medium + 1}) and (max-width: 1366px) {
+  @if $media-query == tablet {
+    @media all and (min-width: #{$medium + 1}) and (max-width: $large) {
       @content;
     }
   }
@@ -35,8 +35,8 @@
   }
 }
 
-@mixin ipad {
-  @include media-query(ipad) {
+@mixin tablet {
+  @include media-query(tablet) {
     @content;
   }
 }
