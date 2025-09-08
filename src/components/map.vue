@@ -1,5 +1,9 @@
 <template>
-  <Transition name="slide-map" @after-enter="onAfterEnter">
+  <Transition
+    name="slide-map"
+    @after-enter="onAfterEnter"
+    @after-leave="onAfterLeave"
+  >
     <div v-show="mapMode" class="map">
       <div
         id="map-container"
@@ -199,6 +203,9 @@ export default {
         this.map.resize();
         this.showMap = true;
       }
+    },
+    onAfterLeave() {
+      this.showMap = false;
     },
     // ------------------------------------------------------------
     // Story markers management (Main Markers for the stories)
@@ -477,9 +484,9 @@ export default {
     left: 0;
     right: 0;
     height: 33vh;
-    height: calc(var(--stories-list-height) * 2);
-    border-top-right-radius: 25px;
-    border-top-left-radius: 25px;
+    height: calc(var(--stories-list-height) * 1.75);
+    border-top-right-radius: var(--map-border-radius);
+    border-top-left-radius: var(--map-border-radius);
     background: #fff;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     overflow: hidden;

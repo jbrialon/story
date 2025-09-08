@@ -128,7 +128,7 @@ export default {
     bottom: 0;
     border-radius: 0;
     transform: translateY(0);
-    transition: transform 600ms var(--easing);
+    transition: transform 300ms var(--easing);
   }
 
   @include tablet {

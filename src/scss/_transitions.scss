@@ -12,7 +12,7 @@
 
 .slide-map-enter-active,
 .slide-map-leave-active {
-  transition: all 0.3s var(--easing);
+  transition: transform 300ms var(--easing);
 }
 
 .slide-map-enter-from,

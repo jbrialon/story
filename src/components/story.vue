@@ -165,7 +165,8 @@ export default {
               class="story__header-button story__header-button--map"
               @click="toggleMap()"
             >
-              <i class="bx bx-map"></i>
+              <i v-if="mapMode" class="bx bxs-map"></i>
+              <i v-else class="bx bx-map"></i>
             </button>
           </div>
         </div>
@@ -288,7 +289,7 @@ export default {
     width: 100%;
     height: 100%;
     opacity: 0;
-    transition: opacity 600ms var(--easing), height 600ms var(--easing);
+    transition: opacity 600ms var(--easing), height 300ms var(--easing);
     background-color: var(--c-grey-light);
 
     &.show {
@@ -297,7 +298,7 @@ export default {
 
     &.mapmode {
       @include small-only {
-        height: calc(100% - var(--stories-list-height) + 25px);
+        height: calc(100% - var(--stories-list-height) + 50px);
       }
     }
     img,

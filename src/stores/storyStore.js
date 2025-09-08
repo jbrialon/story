@@ -1,7 +1,10 @@
 import { defineStore } from "pinia";
-import MobileDetect from "mobile-detect";
 
+import { useAppStore } from "./appStore.js";
+
+// Utils
 import preloader from "../utils/Preloader.js";
+
 import { getMediaUrl } from "../utils/imageUtils.js";
 import { formatDate, parseDate } from "../utils/dateUtils.js";
 import { setStoriesListHeight } from "../utils/sizeUtils.js";
@@ -87,6 +90,8 @@ export const useStoryStore = defineStore("story", {
       ) {
         this.mediaIndex[this.currentStoryIndex]++;
       } else {
+        const appStore = useAppStore();
+        appStore.setMapMode(false);
         this.nextStory();
       }
     },
