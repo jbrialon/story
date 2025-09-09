@@ -137,7 +137,13 @@ export default {
 
   &.mapmode {
     @include small-only {
+      transition-delay: 300ms;
       transform: translateY(calc(-1 * var(--stories-list-height)));
+
+      .stories__item {
+        transition-delay: 0s;
+        transform: scale(0);
+      }
     }
   }
 
@@ -211,6 +217,11 @@ export default {
         opacity: 1;
         animation: loading 2000ms infinite;
       }
+    }
+
+    @include small-only {
+      transition: transform 300ms var(--easing);
+      transition-delay: 300ms;
     }
   }
 

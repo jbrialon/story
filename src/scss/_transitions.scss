@@ -10,9 +10,12 @@
   opacity: 0;
 }
 
-.slide-map-enter-active,
+.slide-map-enter-active {
+  transition: transform 300ms var(--easing) 300ms;
+}
+
 .slide-map-leave-active {
-  transition: transform 300ms var(--easing);
+  transition: transform 300ms var(--easing) 0s;
 }
 
 .slide-map-enter-from,

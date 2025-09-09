@@ -33,6 +33,7 @@ export default {
       currentVideoPlaying: null,
       muted: false,
       mapMode: false,
+      hasOpenedMap: false,
     };
   },
   setup() {
@@ -125,6 +126,7 @@ export default {
     toggleMap() {
       this.mapMode = !this.mapMode;
       this.appStore.setMapMode(this.mapMode);
+      this.hasOpenedMap = true;
     },
   },
 };
@@ -166,7 +168,11 @@ export default {
               @click="toggleMap()"
             >
               <i v-if="mapMode" class="bx bxs-map"></i>
-              <i v-else class="bx bx-map"></i>
+              <i
+                v-else
+                class="bx bx-map"
+                :class="{ 'bx-bounce': !hasOpenedMap }"
+              />
             </button>
           </div>
         </div>
@@ -289,7 +295,7 @@ export default {
     width: 100%;
     height: 100%;
     opacity: 0;
-    transition: opacity 600ms var(--easing), height 300ms var(--easing);
+    transition: opacity 600ms var(--easing), height 300ms var(--easing) 0s;
     background-color: var(--c-grey-light);
 
     &.show {
@@ -298,6 +304,7 @@ export default {
 
     &.mapmode {
       @include small-only {
+        transition-delay: 300ms;
         height: calc(100% - calc(var(--stories-list-height) * 0.75 - 25px));
       }
     }
