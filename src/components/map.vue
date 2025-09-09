@@ -79,7 +79,6 @@ export default {
   watch: {
     isReady(value) {
       if (value) {
-        console.log("isReady");
         this.storiesLoading.forEach((loading, index) => {
           if (loading === false) {
             const marker = this.getStoryMarker(index);

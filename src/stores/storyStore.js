@@ -11,7 +11,7 @@ import { setStoriesListHeight } from "../utils/sizeUtils.js";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 const cdnURL = import.meta.env.VITE_CDN_URL;
-
+     
 export const useStoryStore = defineStore("story", {
   state: () => ({
     loading: true,
@@ -47,6 +47,7 @@ export const useStoryStore = defineStore("story", {
       this.mediaIndex[index] = 0;
       this.currentStoryIndex = index;
       this.updateUrlHash();
+      this.hideMap();
     },
 
     updateUrlHash() {
@@ -62,6 +63,7 @@ export const useStoryStore = defineStore("story", {
       this.transitionDirection = 1;
       this.currentStoryIndex++;
       this.updateUrlHash();
+      this.hideMap();
     },
 
     prevStory() {
@@ -70,12 +72,18 @@ export const useStoryStore = defineStore("story", {
       this.transitionDirection = -1;
       this.currentStoryIndex--;
       this.updateUrlHash();
+      this.hideMap();
     },
 
     setMapInteracted(interacted) {
       this.mapInteracted = interacted;
     },
 
+    hideMap () {
+      // we hide the map when we go to the next Story
+      const appStore = useAppStore();
+      appStore.setMapMode(false);
+    },
     // ------------------------------
     // media navigation
     // ------------------------------
@@ -90,8 +98,6 @@ export const useStoryStore = defineStore("story", {
       ) {
         this.mediaIndex[this.currentStoryIndex]++;
       } else {
-        const appStore = useAppStore();
-        appStore.setMapMode(false);
         this.nextStory();
       }
     },

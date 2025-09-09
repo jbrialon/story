@@ -298,7 +298,7 @@ export default {
 
     &.mapmode {
       @include small-only {
-        height: calc(100% - var(--stories-list-height) + 50px);
+        height: calc(100% - calc(var(--stories-list-height) * 0.75 - 25px));
       }
     }
     img,
