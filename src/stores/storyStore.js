@@ -3,11 +3,11 @@ import { defineStore } from "pinia";
 import { useAppStore } from "./appStore.js";
 
 // Utils
-import preloader from "../utils/Preloader.js";
+import preloader from "@/classes/Preloader.js";
 
-import { getMediaUrl } from "../utils/imageUtils.js";
-import { formatDate, parseDate } from "../utils/dateUtils.js";
-import { setStoriesListHeight } from "../utils/sizeUtils.js";
+import { getMediaUrl } from "@/utils/imageUtils.js";
+import { formatDate, parseDate } from "@/utils/dateUtils.js";
+import { setStoriesListHeight } from "@/utils/sizeUtils.js";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 const cdnURL = import.meta.env.VITE_CDN_URL;

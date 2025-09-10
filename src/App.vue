@@ -8,13 +8,13 @@
 
 <script>
 // Components
-import Map from "./components/map.vue";
-import Stories from "./components/stories.vue";
-import Goo from "./components/goo.vue";
-import Loader from "./components/loader.vue";
+import Map from "@/components/map.vue";
+import Stories from "@/components/stories.vue";
+import Goo from "@/components/goo.vue";
+import Loader from "@/components/loader.vue";
 
 // Stores
-import { useStoryStore } from "./stores/storyStore.js";
+import { useStoryStore } from "@/stores/storyStore.js";
 
 export default {
   setup() {

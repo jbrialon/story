@@ -1,7 +1,7 @@
 <script>
-import { getMediaUrl } from "../utils/imageUtils";
-import { useStoryStore } from "../stores/storyStore.js";
-import { useAppStore } from "../stores/appStore.js";
+import { getMediaUrl } from "@/utils/imageUtils";
+import { useStoryStore } from "@/stores/storyStore.js";
+import { useAppStore } from "@/stores/appStore.js";
 
 import Story from "./story.vue";
 

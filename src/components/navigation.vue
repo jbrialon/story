@@ -18,8 +18,8 @@
 </template>
 
 <script>
-import { useStoryStore } from "../stores/storyStore";
-import { getCurrentLabel } from "../utils/timelineUtils";
+import { useStoryStore } from "@/stores/storyStore";
+import { getCurrentLabel } from "@/utils/timelineUtils";
 
 export default {
   name: "Navigation",

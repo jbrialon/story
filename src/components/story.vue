@@ -3,12 +3,12 @@
 import gsap from "gsap";
 
 // Store
-import { useAppStore } from "../stores/appStore.js";
-import { useStoryStore } from "../stores/storyStore.js";
+import { useAppStore } from "@/stores/appStore.js";
+import { useStoryStore } from "@/stores/storyStore.js";
 
 // Utils
-import { getMediaUrl } from "../utils/imageUtils.js";
-import { formatDate } from "../utils/dateUtils.js";
+import { getMediaUrl } from "@/utils/imageUtils.js";
+import { formatDate } from "@/utils/dateUtils.js";
 
 // Components
 import Loader from "./loader.vue";

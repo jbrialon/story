@@ -16,10 +16,10 @@
 
 <script>
 import mapboxgl from "mapbox-gl";
-import { getMediaUrl } from "../utils/imageUtils";
 
-import { useAppStore } from "../stores/appStore.js";
-import { useStoryStore } from "../stores/storyStore.js";
+import { getMediaUrl } from "@/utils/imageUtils";
+import { useAppStore } from "@/stores/appStore.js";
+import { useStoryStore } from "@/stores/storyStore.js";
 
 export default {
   name: "Map",
