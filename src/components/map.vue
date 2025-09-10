@@ -34,8 +34,7 @@ export default {
       mapLoaded: false,
       showMap: false,
       mapOptions: {
-        token:
-          "pk.eyJ1IjoiamJyaWFsb24iLCJhIjoiZjJkNjkyNDNiMzU0YjAxY2FjNGZlMjU3MGFiYjYyZmQifQ.lwFTmFgGxSuvfoJdTcx7Jg",
+        token: import.meta.env.VITE_MAPBOX_TOKEN,
         style: "mapbox://styles/jbrialon/ck3yg7nb807lc1co990hb80mi/draft",
         center: [2.465, 44.95017765091265],
         zoom: 4,

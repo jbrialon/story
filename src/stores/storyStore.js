@@ -11,7 +11,7 @@ import { setStoriesListHeight } from "../utils/sizeUtils.js";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 const cdnURL = import.meta.env.VITE_CDN_URL;
-     
+
 export const useStoryStore = defineStore("story", {
   state: () => ({
     loading: true,
@@ -79,10 +79,12 @@ export const useStoryStore = defineStore("story", {
       this.mapInteracted = interacted;
     },
 
-    hideMap () {
+    hideMap() {
       // we hide the map when we go to the next Story
       const appStore = useAppStore();
-      appStore.setMapMode(false);
+      if (appStore.isMobile) {
+        appStore.setMapMode(false);
+      }
     },
     // ------------------------------
     // media navigation
