@@ -70,7 +70,7 @@ export default {
     },
     isReady() {
       const allStoriesLoaded = this.storyStore.storiesLoading.every(
-        (loading) => !loading
+        (loading) => !loading,
       );
       return allStoriesLoaded && this.mapLoaded;
     },
@@ -105,16 +105,10 @@ export default {
     "storyStore.currentStoryIndex": {
       handler(currentStoryIndex) {
         const storyData = this.storiesData[currentStoryIndex];
-        const stats = storyData?.stats;
-
-        if (stats && stats.length > 0) {
-          // if we have stats, show the media markers and hide the story markers
+        // Show media markers for the current story regardless of whether it has stats/paths
+        if (storyData) {
           this.showMediaMarkers();
           this.hideStoryMarkers();
-        } else {
-          // if we don't have stats, hide the media markers and show the story markers
-          this.hideMediaMarkers();
-          this.showStoryMarkers();
         }
       },
       deep: true,
@@ -122,31 +116,26 @@ export default {
     "storyStore.mediaIndex": {
       handler(mediaIndex) {
         const storyData = this.storiesData[this.currentStoryIndex];
-        const stats = storyData?.stats;
         const storyMediaIndex = mediaIndex[this.currentStoryIndex];
         const media = storyData?.medias[storyMediaIndex];
 
-        if (stats && stats.length > 0) {
-          if (storyMediaIndex === 0) {
-            this.showStoryPath();
-          } else if (
-            storyMediaIndex === 1 &&
-            this.currentStoryIndex === this.priorityIndex
-          ) {
-            this.showStoryPath();
-            this.showMediaMarkers();
-            this.hideStoryMarkers();
-          } else {
-            if (media?.exif.GPS) {
-              this.map.flyTo({
-                center: [media.exif.GPS.longitude, media.exif.GPS.latitude],
-                zoom: this.isMobile ? 9 : 12,
-                duration: 2000,
-              });
-            }
-          }
+        if (storyMediaIndex === 0) {
+          this.showStoryPath();
+        } else if (
+          storyMediaIndex === 1 &&
+          this.currentStoryIndex === this.priorityIndex
+        ) {
+          this.showStoryPath();
+          this.showMediaMarkers();
+          this.hideStoryMarkers();
         } else {
-          this.hideStoryPath();
+          if (media?.exif.GPS) {
+            this.map.flyTo({
+              center: [media.exif.GPS.longitude, media.exif.GPS.latitude],
+              zoom: this.isMobile ? 9 : 12,
+              duration: 2000,
+            });
+          }
         }
         this.setMediaMarkerActive(storyMediaIndex);
       },
@@ -229,7 +218,7 @@ export default {
       const marker = new mapboxgl.Marker(markerElement);
       const coord = new mapboxgl.LngLat(
         story.location.longitude,
-        story.location.latitude
+        story.location.latitude,
       );
       marker.setLngLat(coord);
       marker.addTo(this.map);
@@ -261,7 +250,7 @@ export default {
     },
     getStoryMarker(storyIndex) {
       return this.storyMarkers.find(
-        (marker) => marker.storyIndex === storyIndex
+        (marker) => marker.storyIndex === storyIndex,
       );
     },
     // ------------------------------------------------------------
@@ -287,7 +276,7 @@ export default {
         const marker = new mapboxgl.Marker(markerElement);
         const coord = new mapboxgl.LngLat(
           media.exif.GPS.longitude,
-          media.exif.GPS.latitude
+          media.exif.GPS.latitude,
         );
         marker.setLngLat(coord);
         marker.addTo(this.map);
@@ -336,21 +325,33 @@ export default {
       const story = this.storiesData[storyIndex];
       const stats = story.stats;
 
+      // Always build bounds from media markers
       this.boundsPaths[storyIndex] = new mapboxgl.LngLatBounds();
+      story.medias.forEach((media) => {
+        const gps = media.exif.GPS;
+        if (gps) {
+          this.boundsPaths[storyIndex].extend([gps.longitude, gps.latitude]);
+        }
+      });
 
-      // Add path to map
-      if (stats.length > 0) {
-        this.storyPaths[storyIndex] = new Array(stats.length).fill();
-
-        stats.forEach((stat, statIndex) => {
+      // Add paths to map if available
+      if (stats && stats.length > 0) {
+        this.storyPaths[storyIndex] = stats.map((stat, statIndex) => {
           const segments = stat.path.tracks[0].segments[0];
           const coordinates = segments.map((segment) => [
             segment.lon,
             segment.lat,
           ]);
 
-          // Add the line source
-          this.map.addSource(`path-${storyIndex}-${statIndex}`, {
+          // Add path coordinates to bounds
+          const step = Math.max(Math.floor(coordinates.length / 2), 1);
+          for (let i = 0; i < coordinates.length; i += step) {
+            this.boundsPaths[storyIndex].extend(coordinates[i]);
+          }
+
+          const sourceId = `path-${storyIndex}-${statIndex}`;
+
+          this.map.addSource(sourceId, {
             type: "geojson",
             data: {
               type: "Feature",
@@ -376,10 +377,11 @@ export default {
                 "line-opacity": 0,
                 "line-dasharray": [2, 2],
               };
+
           this.map.addLayer({
-            id: `path-${storyIndex}-${statIndex}`,
+            id: sourceId,
             type: "line",
-            source: `path-${storyIndex}-${statIndex}`,
+            source: sourceId,
             layout: {
               "line-join": "round",
               "line-cap": "round",
@@ -387,45 +389,31 @@ export default {
             paint,
           });
 
-          this.map.setLayoutProperty(
-            `path-${storyIndex}-${statIndex}`,
-            "visibility",
-            "none"
-          );
+          this.map.setLayoutProperty(sourceId, "visibility", "none");
 
-          this.storyPaths[storyIndex][statIndex] = {
-            id: `path-${storyIndex}-${statIndex}`,
+          return {
+            id: sourceId,
             index: statIndex,
             storyIndex: storyIndex,
           };
-
-          const step = Math.max(Math.floor(coordinates.length / 2), 1);
-          for (let i = 0; i < coordinates.length; i += step) {
-            this.boundsPaths[storyIndex].extend(coordinates[i]);
-          }
         });
       }
     },
     showStoryPath() {
-      this.storyPaths.forEach((paths, index) => {
-        if (index === this.currentStoryIndex) {
-          paths?.forEach((path) => {
-            if (this.map.getLayer(path.id)) {
-              this.map.setLayoutProperty(path.id, "visibility", "visible");
-              this.map.setPaintProperty(path.id, "line-opacity", 1);
+      // Hide all paths first
+      this.hideStoryPath();
 
-              this.fitBounds(this.boundsPaths[index]);
-            }
-          });
-        } else {
-          paths?.forEach((path) => {
-            if (this.map.getLayer(path.id)) {
-              // this.map.setLayoutProperty(path.id, "visibility", "none");
-              this.map.setPaintProperty(path.id, "line-opacity", 0);
-            }
-          });
+      // Show current story's paths
+      const currentPaths = this.storyPaths[this.currentStoryIndex];
+      currentPaths?.forEach((path) => {
+        if (this.map.getLayer(path.id)) {
+          this.map.setLayoutProperty(path.id, "visibility", "visible");
+          this.map.setPaintProperty(path.id, "line-opacity", 1);
         }
       });
+
+      // Fit to bounds
+      this.fitBounds(this.boundsPaths[this.currentStoryIndex]);
     },
     hideStoryPath() {
       this.storyPaths.forEach((paths) => {
@@ -541,7 +529,9 @@ export default {
         #ff0040,
         #e600cc 80%
       );
-      transition: opacity 300ms var(--easing), transform 600ms var(--easing),
+      transition:
+        opacity 300ms var(--easing),
+        transform 600ms var(--easing),
         box-shadow 300ms var(--easing);
       box-shadow: 0 rem-calc(2px) rem-calc(8px) rgba(0, 0, 0, 0.3);
       transform: scale(0);
