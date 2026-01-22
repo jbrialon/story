@@ -8,7 +8,6 @@ import { useStoryStore } from "@/stores/storyStore.js";
 
 // Utils
 import { getMediaUrl } from "@/utils/imageUtils.js";
-import { formatDate } from "@/utils/dateUtils.js";
 
 // Components
 import Loader from "./loader.vue";
@@ -82,16 +81,17 @@ export default {
     },
   },
   methods: {
-    getDateRange(stats) {
-      if (!stats || stats.length === 0) return "";
+    getDateRange(medias) {
+      // Skip first media (cover) and get dates from remaining medias
+      if (!medias || medias.length < 2) return null;
 
-      const startDate = formatDate(stats[0].timestamp);
-      const endDate = formatDate(stats[stats.length - 1].timestamp);
+      const storyMedias = medias.slice(1).filter((media) => media.exif?.formattedDate);
+      if (storyMedias.length === 0) return null;
 
-      return {
-        startDate,
-        endDate,
-      };
+      const startDate = storyMedias[0].exif.formattedDate;
+      const endDate = storyMedias[storyMedias.length - 1].exif.formattedDate;
+
+      return { startDate, endDate };
     },
     getDistance(stats) {
       return `${stats
@@ -196,17 +196,17 @@ export default {
                 <h2>
                   {{ storyData.story.name }}
                 </h2>
-                <p>
+                <p v-if="storyData.stats && storyData.stats.length > 0">
                   <i class="bx bx-directions"></i>
                   {{ getDistance(storyData.stats) }}
                   <i class="bx bx-mountain-peak"></i>
                   {{ getElevation(storyData.stats) }}
                 </p>
-                <p>
+                <p v-if="getDateRange(storyData.medias)">
                   <i class="bx bx-calendar-alt"></i>
-                  {{ getDateRange(storyData.stats).startDate }}
+                  {{ getDateRange(storyData.medias).startDate }}
                   <i class="bx bx-arrow-right-stroke"></i>
-                  {{ getDateRange(storyData.stats).endDate }}
+                  {{ getDateRange(storyData.medias).endDate }}
                 </p>
               </div>
               <img
@@ -295,7 +295,9 @@ export default {
     width: 100%;
     height: 100%;
     opacity: 0;
-    transition: opacity 600ms var(--easing), height 300ms var(--easing) 0s;
+    transition:
+      opacity 600ms var(--easing),
+      height 300ms var(--easing) 0s;
     background-color: var(--c-grey-light);
 
     &.show {
