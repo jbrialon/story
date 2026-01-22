@@ -196,13 +196,13 @@ export default {
                 <h2>
                   {{ storyData.story.name }}
                 </h2>
-                <p>
+                <p v-if="storyData.stats.length > 0">
                   <i class="bx bx-directions"></i>
                   {{ getDistance(storyData.stats) }}
                   <i class="bx bx-mountain-peak"></i>
                   {{ getElevation(storyData.stats) }}
                 </p>
-                <p>
+                <p v-if="storyData.stats.length > 0">
                   <i class="bx bx-calendar-alt"></i>
                   {{ getDateRange(storyData.stats).startDate }}
                   <i class="bx bx-arrow-right-stroke"></i>
@@ -295,7 +295,9 @@ export default {
     width: 100%;
     height: 100%;
     opacity: 0;
-    transition: opacity 600ms var(--easing), height 300ms var(--easing) 0s;
+    transition:
+      opacity 600ms var(--easing),
+      height 300ms var(--easing) 0s;
     background-color: var(--c-grey-light);
 
     &.show {
