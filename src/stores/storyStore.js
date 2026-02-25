@@ -31,6 +31,7 @@ export const useStoryStore = defineStore("story", {
     storyData: [], // Array to store individual story data by story index
     mediaIndex: [],
     mapInteracted: false,
+    mapReady: false,
   }),
 
   actions: {
@@ -50,7 +51,13 @@ export const useStoryStore = defineStore("story", {
         return;
 
       this.transitionDirection = index > this.currentStoryIndex ? 1 : -1;
-      this.mediaIndex[index] = this.getSavedMediaIndex(index);
+      // If the story is already viewed, start from the beginning
+      // Otherwise restore saved progress
+      if (this.storyViewed[index]) {
+        this.mediaIndex[index] = 0;
+      } else {
+        this.mediaIndex[index] = this.getSavedMediaIndex(index);
+      }
       this.currentStoryIndex = index;
       this.updateUrlHash();
       this.hideMap();
@@ -76,6 +83,14 @@ export const useStoryStore = defineStore("story", {
       if (this.currentStoryIndex === 0) return;
 
       this.transitionDirection = -1;
+      const prevIndex = this.currentStoryIndex - 1;
+      // If the previous story is fully viewed, go back to the first media
+      // Otherwise restore saved progress so user continues where they left off
+      if (this.storyViewed[prevIndex]) {
+        this.mediaIndex[prevIndex] = 0;
+      } else {
+        this.mediaIndex[prevIndex] = this.getSavedMediaIndex(prevIndex);
+      }
       this.currentStoryIndex--;
       this.updateUrlHash();
       this.hideMap();
@@ -83,6 +98,10 @@ export const useStoryStore = defineStore("story", {
 
     setMapInteracted(interacted) {
       this.mapInteracted = interacted;
+    },
+
+    setMapReady(ready) {
+      this.mapReady = ready;
     },
 
     hideMap() {
@@ -137,7 +156,13 @@ export const useStoryStore = defineStore("story", {
     saveCurrentMediaProgress() {
       const story = this.stories[this.currentStoryIndex];
       if (story) {
-        saveProgress(story.id, this.mediaIndex[this.currentStoryIndex]);
+        const currentIndex = this.mediaIndex[this.currentStoryIndex];
+        const savedProgress = getSavedProgress();
+        const savedIndex = savedProgress[story.id] || 0;
+        // Only save if we've gone further than before (same as instagram stories)
+        if (currentIndex > savedIndex) {
+          saveProgress(story.id, currentIndex);
+        }
       }
     },
 
@@ -287,8 +312,24 @@ export const useStoryStore = defineStore("story", {
         // Load additional resources
         await this.loadStoryResources(story, storyData);
 
+        // Check if new media was added since the user last viewed the story
+        // If saved progress hasn't reached the new last media, mark as unviewed
+        const savedIndex = this.getSavedMediaIndex(index);
+        if (
+          this.storyViewed[index] &&
+          savedIndex < storyData.medias.length - 1
+        ) {
+          this.setStoryViewed(index, false);
+        }
+
         // Restore saved media progress before mounting components
-        this.mediaIndex[index] = this.getSavedMediaIndex(index);
+        // If the story is already viewed, start from the beginning
+        // Otherwise restore saved progress
+        if (this.storyViewed[index]) {
+          this.mediaIndex[index] = 0;
+        } else {
+          this.mediaIndex[index] = savedIndex;
+        }
 
         // Update loading states
         this.updateLoadingStates(index);

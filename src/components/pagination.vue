@@ -32,7 +32,7 @@ export default {
       const value = this.medias.length;
       const margin = Math.max(
         3,
-        Math.min(8, value < 20 ? 8 : value < 30 ? 6 : 4),
+        Math.min(8, value < 20 ? 8 : value < 30 ? 6 : value < 40 ? 4 : 3),
       );
       return `--bullet-margin: ${margin}px`;
     },
