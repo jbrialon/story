@@ -22,13 +22,17 @@ export default {
       type: Function,
       required: true,
     },
+    initialMediaIndex: {
+      type: Number,
+      default: 0,
+    },
   },
   computed: {
     margin() {
       const value = this.medias.length;
       const margin = Math.max(
-        4,
-        Math.min(8, value < 20 ? 8 : value < 30 ? 6 : 4)
+        3,
+        Math.min(8, value < 20 ? 8 : value < 30 ? 6 : 4),
       );
       return `--bullet-margin: ${margin}px`;
     },
@@ -53,6 +57,12 @@ export default {
         onComplete: () => this.nextMedia(),
       });
     });
+
+    // If restoring a saved media index, seek the timeline to the correct position
+    if (this.initialMediaIndex > 0) {
+      const label = `bullet-${this.initialMediaIndex}`;
+      this.tl.seek(label);
+    }
   },
   beforeUnmount() {
     this.tl.clear();

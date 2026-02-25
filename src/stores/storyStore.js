@@ -8,6 +8,12 @@ import preloader from "@/classes/Preloader.js";
 import { getMediaUrl } from "@/utils/imageUtils.js";
 import { formatDate, parseDate } from "@/utils/dateUtils.js";
 import { setStoriesListHeight } from "@/utils/sizeUtils.js";
+import {
+  getSavedProgress,
+  saveProgress,
+  getSavedViewed,
+  saveViewed,
+} from "@/utils/storageUtils.js";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 const cdnURL = import.meta.env.VITE_CDN_URL;
@@ -44,7 +50,7 @@ export const useStoryStore = defineStore("story", {
         return;
 
       this.transitionDirection = index > this.currentStoryIndex ? 1 : -1;
-      this.mediaIndex[index] = 0;
+      this.mediaIndex[index] = this.getSavedMediaIndex(index);
       this.currentStoryIndex = index;
       this.updateUrlHash();
       this.hideMap();
@@ -99,6 +105,15 @@ export const useStoryStore = defineStore("story", {
         this.storyData[this.currentStoryIndex].medias.length - 1
       ) {
         this.mediaIndex[this.currentStoryIndex]++;
+        this.saveCurrentMediaProgress();
+
+        // Mark story as viewed when reaching the last media
+        if (
+          this.mediaIndex[this.currentStoryIndex] ===
+          this.storyData[this.currentStoryIndex].medias.length - 1
+        ) {
+          this.setStoryViewed(this.currentStoryIndex, true);
+        }
       } else {
         this.nextStory();
       }
@@ -112,9 +127,23 @@ export const useStoryStore = defineStore("story", {
       }
     },
 
+    getSavedMediaIndex(storyIndex) {
+      const story = this.stories[storyIndex];
+      if (!story) return 0;
+      const progress = getSavedProgress();
+      return progress[story.id] || 0;
+    },
+
+    saveCurrentMediaProgress() {
+      const story = this.stories[this.currentStoryIndex];
+      if (story) {
+        saveProgress(story.id, this.mediaIndex[this.currentStoryIndex]);
+      }
+    },
+
     resetMediaIndex() {
       this.mediaIndex = this.mediaIndex.map((_, index) =>
-        index === this.currentStoryIndex ? this.mediaIndex[index] : 0
+        index === this.currentStoryIndex ? this.mediaIndex[index] : 0,
       );
     },
     // ------------------------------
@@ -123,7 +152,8 @@ export const useStoryStore = defineStore("story", {
     setStories(stories) {
       this.stories = stories;
       this.storiesLoading = new Array(stories.length).fill(true);
-      this.storyViewed = new Array(stories.length).fill(false);
+      const viewed = getSavedViewed();
+      this.storyViewed = stories.map((story) => !!viewed[story.id]);
       this.storyData = new Array(stories.length).fill(null);
       this.mediaIndex = new Array(stories.length).fill(0);
     },
@@ -142,6 +172,10 @@ export const useStoryStore = defineStore("story", {
     setStoryViewed(storyIndex, viewed) {
       if (this.storyViewed[storyIndex] !== undefined) {
         this.storyViewed[storyIndex] = viewed;
+        const story = this.stories[storyIndex];
+        if (story) {
+          saveViewed(story.id, viewed);
+        }
       }
     },
     // ENTRY LOADING POINT
@@ -225,7 +259,7 @@ export const useStoryStore = defineStore("story", {
       // Load priority story first
       await this.fetchStoryData(
         stories[this.priorityIndex],
-        this.priorityIndex
+        this.priorityIndex,
       );
 
       // Load remaining stories
@@ -247,10 +281,14 @@ export const useStoryStore = defineStore("story", {
 
         // Process and store story data
         const storyData = this.processStoryData(data.data);
+        // storyData.medias = storyData.medias.slice(10);
         this.setStoryData(index, storyData);
 
         // Load additional resources
         await this.loadStoryResources(story, storyData);
+
+        // Restore saved media progress before mounting components
+        this.mediaIndex[index] = this.getSavedMediaIndex(index);
 
         // Update loading states
         this.updateLoadingStates(index);
@@ -286,7 +324,7 @@ export const useStoryStore = defineStore("story", {
     async loadStoryResources(story, storyData) {
       // Preload photos
       const medias = storyData.medias.map((media) =>
-        getMediaUrl(story, media.src)
+        getMediaUrl(story, media.src),
       );
       await preloader.load(medias);
 
@@ -313,7 +351,7 @@ export const useStoryStore = defineStore("story", {
           } catch (error) {
             console.warn(`Could not fetch path: ${pathUrl}`);
           }
-        })
+        }),
       );
     },
 
