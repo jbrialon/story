@@ -24,7 +24,7 @@ export default {
   components: { Map, Stories, Goo, Loader },
   computed: {
     loading() {
-      return this.storyStore.isLoading;
+      return this.storyStore.isLoading || !this.storyStore.mapReady;
     },
   },
   methods: {

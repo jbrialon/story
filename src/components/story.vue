@@ -59,10 +59,6 @@ export default {
       if (!this.storyData) return;
 
       this.controlVideoPlayback();
-
-      if (this.currentMediaIndex === this.storyData.medias.length - 1) {
-        this.storyStore.setStoryViewed(this.index, true);
-      }
     },
     "storyStore.mapInteracted": {
       handler(interacted) {
@@ -85,7 +81,9 @@ export default {
       // Skip first media (cover) and get dates from remaining medias
       if (!medias || medias.length < 2) return null;
 
-      const storyMedias = medias.slice(1).filter((media) => media.exif?.formattedDate);
+      const storyMedias = medias
+        .slice(1)
+        .filter((media) => media.exif?.formattedDate);
       if (storyMedias.length === 0) return null;
 
       const startDate = storyMedias[0].exif.formattedDate;
@@ -143,6 +141,7 @@ export default {
           :medias="storyData.medias"
           :tl="tl"
           :nextMedia="storyStore.nextMedia"
+          :initialMediaIndex="currentMediaIndex"
         />
         <div class="story__header" v-if="currentMediaIndex !== 0">
           <div class="story__header-title">

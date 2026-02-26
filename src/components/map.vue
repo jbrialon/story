@@ -74,6 +74,13 @@ export default {
       );
       return allStoriesLoaded && this.mapLoaded;
     },
+    canFitBounds() {
+      return (
+        this.mapLoaded &&
+        !this.storyStore.isLoading &&
+        this.storyMarkers.length > 0
+      );
+    },
   },
   watch: {
     isReady(value) {
@@ -88,6 +95,16 @@ export default {
             }
           }
         });
+
+        // If current story has restored progress, show its markers and path
+        const storyMediaIndex =
+          this.storyStore.mediaIndex[this.currentStoryIndex];
+        if (storyMediaIndex > 0) {
+          this.showMediaMarkers();
+          this.hideStoryMarkers();
+          this.showStoryPath({ skipFitBounds: true });
+          this.setMediaMarkerActive(storyMediaIndex);
+        }
       }
     },
     "storyStore.stories": {
@@ -105,10 +122,24 @@ export default {
     "storyStore.currentStoryIndex": {
       handler(currentStoryIndex) {
         const storyData = this.storiesData[currentStoryIndex];
-        // Show media markers for the current story regardless of whether it has stats/paths
-        if (storyData) {
-          this.showMediaMarkers();
-          this.hideStoryMarkers();
+        if (!storyData) return;
+
+        this.showMediaMarkers();
+        this.hideStoryMarkers();
+
+        // If restored to a saved progress position, fly to that media's marker
+        const storyMediaIndex = this.storyStore.mediaIndex[currentStoryIndex];
+        if (storyMediaIndex > 0) {
+          const gps = this.findMediaWithGPS(currentStoryIndex, storyMediaIndex);
+          if (gps) {
+            this.showStoryPath({ skipFitBounds: true });
+            this.setMediaMarkerActive(storyMediaIndex);
+            this.map.flyTo({
+              center: [gps.longitude, gps.latitude],
+              zoom: this.isMobile ? 9 : 12,
+              duration: 2000,
+            });
+          }
         }
       },
       deep: true,
@@ -141,19 +172,48 @@ export default {
       },
       deep: true,
     },
-    "storyStore.loadingTransitionComplete": {
-      handler(complete) {
-        // when loading transition is complete we trigger the reveal animation
-        if (complete) {
-          this.fitBounds(this.mapOptions.bounds);
-        }
-      },
-      immediate: true,
+    canFitBounds(value) {
+      if (!value) return;
+
+      const storyMediaIndex =
+        this.storyStore.mediaIndex[this.currentStoryIndex];
+      const gps =
+        storyMediaIndex > 0
+          ? this.findMediaWithGPS(this.currentStoryIndex, storyMediaIndex)
+          : null;
+
+      if (gps) {
+        // Saved progress: fly directly to the restored media marker
+        // Markers/paths aren't created yet, they'll be shown by the isReady watcher
+        this.map.flyTo({
+          center: [gps.longitude, gps.latitude],
+          zoom: this.isMobile ? 9 : 12,
+          duration: 1000,
+        });
+      } else {
+        // No saved progress: fit to all story markers
+        this.fitBounds(this.mapOptions.bounds);
+      }
+
+      this.map.once("moveend", () => {
+        this.storyStore.setMapReady(true);
+      });
     },
   },
   methods: {
     getMediaUrl(story) {
       return getMediaUrl(story, story.cover);
+    },
+    // Helper to find the closest previous location
+    // so we init the map to this location when open the app with a saved media progress
+    findMediaWithGPS(storyIndex, mediaIndex) {
+      const storyData = this.storiesData[storyIndex];
+      if (!storyData) return null;
+      for (let i = mediaIndex; i >= 0; i--) {
+        const gps = storyData.medias[i]?.exif?.GPS;
+        if (gps) return gps;
+      }
+      return null;
     },
     fitBounds(bounds) {
       if (!bounds || !this.mapLoaded) return;
@@ -399,7 +459,7 @@ export default {
         });
       }
     },
-    showStoryPath() {
+    showStoryPath({ skipFitBounds = false } = {}) {
       // Hide all paths first
       this.hideStoryPath();
 
@@ -412,8 +472,9 @@ export default {
         }
       });
 
-      // Fit to bounds
-      this.fitBounds(this.boundsPaths[this.currentStoryIndex]);
+      if (!skipFitBounds) {
+        this.fitBounds(this.boundsPaths[this.currentStoryIndex]);
+      }
     },
     hideStoryPath() {
       this.storyPaths.forEach((paths) => {

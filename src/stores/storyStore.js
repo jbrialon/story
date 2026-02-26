@@ -8,6 +8,12 @@ import preloader from "@/classes/Preloader.js";
 import { getMediaUrl } from "@/utils/imageUtils.js";
 import { formatDate, parseDate } from "@/utils/dateUtils.js";
 import { setStoriesListHeight } from "@/utils/sizeUtils.js";
+import {
+  getSavedProgress,
+  saveProgress,
+  getSavedViewed,
+  saveViewed,
+} from "@/utils/storageUtils.js";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 const cdnURL = import.meta.env.VITE_CDN_URL;
@@ -25,6 +31,7 @@ export const useStoryStore = defineStore("story", {
     storyData: [], // Array to store individual story data by story index
     mediaIndex: [],
     mapInteracted: false,
+    mapReady: false,
   }),
 
   actions: {
@@ -44,7 +51,13 @@ export const useStoryStore = defineStore("story", {
         return;
 
       this.transitionDirection = index > this.currentStoryIndex ? 1 : -1;
-      this.mediaIndex[index] = 0;
+      // If the story is already viewed, start from the beginning
+      // Otherwise restore saved progress
+      if (this.storyViewed[index]) {
+        this.mediaIndex[index] = 0;
+      } else {
+        this.mediaIndex[index] = this.getSavedMediaIndex(index);
+      }
       this.currentStoryIndex = index;
       this.updateUrlHash();
       this.hideMap();
@@ -70,6 +83,14 @@ export const useStoryStore = defineStore("story", {
       if (this.currentStoryIndex === 0) return;
 
       this.transitionDirection = -1;
+      const prevIndex = this.currentStoryIndex - 1;
+      // If the previous story is fully viewed, go back to the first media
+      // Otherwise restore saved progress so user continues where they left off
+      if (this.storyViewed[prevIndex]) {
+        this.mediaIndex[prevIndex] = 0;
+      } else {
+        this.mediaIndex[prevIndex] = this.getSavedMediaIndex(prevIndex);
+      }
       this.currentStoryIndex--;
       this.updateUrlHash();
       this.hideMap();
@@ -77,6 +98,10 @@ export const useStoryStore = defineStore("story", {
 
     setMapInteracted(interacted) {
       this.mapInteracted = interacted;
+    },
+
+    setMapReady(ready) {
+      this.mapReady = ready;
     },
 
     hideMap() {
@@ -99,6 +124,15 @@ export const useStoryStore = defineStore("story", {
         this.storyData[this.currentStoryIndex].medias.length - 1
       ) {
         this.mediaIndex[this.currentStoryIndex]++;
+        this.saveCurrentMediaProgress();
+
+        // Mark story as viewed when reaching the last media
+        if (
+          this.mediaIndex[this.currentStoryIndex] ===
+          this.storyData[this.currentStoryIndex].medias.length - 1
+        ) {
+          this.setStoryViewed(this.currentStoryIndex, true);
+        }
       } else {
         this.nextStory();
       }
@@ -112,9 +146,29 @@ export const useStoryStore = defineStore("story", {
       }
     },
 
+    getSavedMediaIndex(storyIndex) {
+      const story = this.stories[storyIndex];
+      if (!story) return 0;
+      const progress = getSavedProgress();
+      return progress[story.id] || 0;
+    },
+
+    saveCurrentMediaProgress() {
+      const story = this.stories[this.currentStoryIndex];
+      if (story) {
+        const currentIndex = this.mediaIndex[this.currentStoryIndex];
+        const savedProgress = getSavedProgress();
+        const savedIndex = savedProgress[story.id] || 0;
+        // Only save if we've gone further than before (same as instagram stories)
+        if (currentIndex > savedIndex) {
+          saveProgress(story.id, currentIndex);
+        }
+      }
+    },
+
     resetMediaIndex() {
       this.mediaIndex = this.mediaIndex.map((_, index) =>
-        index === this.currentStoryIndex ? this.mediaIndex[index] : 0
+        index === this.currentStoryIndex ? this.mediaIndex[index] : 0,
       );
     },
     // ------------------------------
@@ -123,7 +177,8 @@ export const useStoryStore = defineStore("story", {
     setStories(stories) {
       this.stories = stories;
       this.storiesLoading = new Array(stories.length).fill(true);
-      this.storyViewed = new Array(stories.length).fill(false);
+      const viewed = getSavedViewed();
+      this.storyViewed = stories.map((story) => !!viewed[story.id]);
       this.storyData = new Array(stories.length).fill(null);
       this.mediaIndex = new Array(stories.length).fill(0);
     },
@@ -142,6 +197,10 @@ export const useStoryStore = defineStore("story", {
     setStoryViewed(storyIndex, viewed) {
       if (this.storyViewed[storyIndex] !== undefined) {
         this.storyViewed[storyIndex] = viewed;
+        const story = this.stories[storyIndex];
+        if (story) {
+          saveViewed(story.id, viewed);
+        }
       }
     },
     // ENTRY LOADING POINT
@@ -225,7 +284,7 @@ export const useStoryStore = defineStore("story", {
       // Load priority story first
       await this.fetchStoryData(
         stories[this.priorityIndex],
-        this.priorityIndex
+        this.priorityIndex,
       );
 
       // Load remaining stories
@@ -247,10 +306,30 @@ export const useStoryStore = defineStore("story", {
 
         // Process and store story data
         const storyData = this.processStoryData(data.data);
+        // storyData.medias = storyData.medias.slice(10);
         this.setStoryData(index, storyData);
 
         // Load additional resources
         await this.loadStoryResources(story, storyData);
+
+        // Check if new media was added since the user last viewed the story
+        // If saved progress hasn't reached the new last media, mark as unviewed
+        const savedIndex = this.getSavedMediaIndex(index);
+        if (
+          this.storyViewed[index] &&
+          savedIndex < storyData.medias.length - 1
+        ) {
+          this.setStoryViewed(index, false);
+        }
+
+        // Restore saved media progress before mounting components
+        // If the story is already viewed, start from the beginning
+        // Otherwise restore saved progress
+        if (this.storyViewed[index]) {
+          this.mediaIndex[index] = 0;
+        } else {
+          this.mediaIndex[index] = savedIndex;
+        }
 
         // Update loading states
         this.updateLoadingStates(index);
@@ -286,7 +365,7 @@ export const useStoryStore = defineStore("story", {
     async loadStoryResources(story, storyData) {
       // Preload photos
       const medias = storyData.medias.map((media) =>
-        getMediaUrl(story, media.src)
+        getMediaUrl(story, media.src),
       );
       await preloader.load(medias);
 
@@ -313,7 +392,7 @@ export const useStoryStore = defineStore("story", {
           } catch (error) {
             console.warn(`Could not fetch path: ${pathUrl}`);
           }
-        })
+        }),
       );
     },
 
