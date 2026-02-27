@@ -310,7 +310,7 @@ export const useStoryStore = defineStore("story", {
         this.setStoryData(index, storyData);
 
         // Load additional resources
-        await this.loadStoryResources(story, storyData);
+        await this.loadStoryResources(story, storyData, index);
 
         // Check if new media was added since the user last viewed the story
         // If saved progress hasn't reached the new last media, mark as unviewed
@@ -362,12 +362,13 @@ export const useStoryStore = defineStore("story", {
       };
     },
 
-    async loadStoryResources(story, storyData) {
+    async loadStoryResources(story, storyData, index) {
       // Preload photos
       const medias = storyData.medias.map((media) =>
         getMediaUrl(story, media.src),
       );
-      await preloader.load(medias);
+      // using a key "story-" so it's always thruty
+      await preloader.load(medias, `story-${index}`);
 
       // Load map paths if needed
       if (storyData.stats?.length > 0) {
@@ -378,9 +379,10 @@ export const useStoryStore = defineStore("story", {
     async loadStoryPaths(story, storyData) {
       await Promise.all(
         storyData.stats.map(async (stat, statIndex) => {
+          const timestamp = new Date(story.lastUpdate).getTime();
           const pathUrl = `${cdnURL}/story/${encodeURIComponent(story.id)}${
             stat.pathJson
-          }?v=${story.lastUpdate}`;
+          }?v=${timestamp}`;
           try {
             const pathResponse = await fetch(pathUrl);
             if (pathResponse.ok) {
@@ -412,5 +414,10 @@ export const useStoryStore = defineStore("story", {
     getStoryData: (state) => (storyIndex) =>
       state.storyData[storyIndex] || null,
     isLoadingTransitionComplete: (state) => state.loadingTransitionComplete,
+    priorityCoverUrl: (state) => {
+      const story = state.stories[state.priorityIndex];
+      if (!story || !story.cover) return null;
+      return getMediaUrl(story, story.cover);
+    },
   },
 });

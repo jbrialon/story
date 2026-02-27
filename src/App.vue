@@ -1,6 +1,6 @@
 <template>
-  <Transition name="fade" @after-leave="onLoadingTransitionComplete">
-    <Loader class="waiting-screen" v-if="loading" />
+  <Transition name="fade-zoom" @after-leave="onLoadingTransitionComplete">
+    <Loader class="waiting-screen" v-if="loading" type="main" />
   </Transition>
   <Map />
   <Stories v-cloak />
