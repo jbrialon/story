@@ -7,7 +7,8 @@
 const cdnURL = import.meta.env.VITE_CDN_URL;
 
 export function getMediaUrl(story, mediaPath) {
+  const timestamp = new Date(story.lastUpdate).getTime();
   return `${cdnURL}/story/${encodeURIComponent(story.id)}${mediaPath}?v=${
-    story.lastUpdate
+    timestamp
   }`;
 }
